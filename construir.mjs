@@ -41,10 +41,9 @@ await build({ entryPoints: ["src/w/pagina.ts"], bundle: true, format: "esm", min
 const V = "vendor/gadsden/";
 // Sin los {% comment %} del Liquid: no se ven y sólo engordan lo que baja el iframe.
 const sinComentarios = (t) => t.replace(/\{%-?\s*comment\s*-?%\}[\s\S]*?\{%-?\s*endcomment\s*-?%\}/g, "");
-// White label (BUILD.md, decisión 20): fuera los comentarios de CSS (los de Gadsden nombran la tienda para la que se hizo
-// la sección) y la clase del schema con ese nombre (Shopify la pone en el contenedor): la de la sección.
-const sinMarcas = (t, n) => t.replace(/(<style[^>]*>|\{%-?\s*style\s*-?%\})([\s\S]*?)(<\/style>|\{%-?\s*endstyle\s*-?%\})/g, (_, a, css, b) => a + css.replace(/\/\*[\s\S]*?\*\//g, "") + b)
-  .replace(/"class": "(?:athlex|domu|gps|carbo|ct)-[a-z-]*section"/, `"class": "${n}-section"`);
+// White label (BUILD.md, decisión 20): fuera los comentarios de CSS. Las clases del schema con el nombre de una tienda
+// ya no existen desde Gadsden 1.2.9 (vendor/gadsden).
+const sinMarcas = (t, n) => t.replace(/(<style[^>]*>|\{%-?\s*style\s*-?%\})([\s\S]*?)(<\/style>|\{%-?\s*endstyle\s*-?%\})/g, (_, a, css, b) => a + css.replace(/\/\*[\s\S]*?\*\//g, "") + b);
 const carpeta = (c) => Object.fromEntries(readdirSync(c).filter((f) => f.endsWith(".liquid")).map((f) => [f.replace(".liquid", ""), sinMarcas(sinComentarios(readFileSync(c + f, "utf8")), f.replace(".liquid", ""))]));
 
 const json = (f) => JSON.parse(readFileSync(V + "config/" + f, "utf8"));
@@ -73,7 +72,7 @@ function snippetsDe(liquid) {
 rmSync("dist/w/fuentes.json", { force: true });
 for (const d of ["secciones", "bloques"]) mkdirSync(`dist/w/fuentes/${d}`, { recursive: true });
 writeFileSync("dist/w/fuentes/comun.json", JSON.stringify({
-  textos: json("es-gadsden.json"), ajustes: { defaults: json("defaults.json"), oscuro: json("domu.json"), clasico: json("clasico.json") },
+  textos: json("es-gadsden.json"), ajustes: { defaults: json("defaults.json"), oscuro: json("ajustes-oscuro.json"), clasico: json("clasico.json") },
 }));
 for (const [tipo, liquid] of Object.entries(secciones)) {
   writeFileSync(`dist/w/fuentes/secciones/${tipo}.json`, JSON.stringify({ secciones: { [tipo]: liquid }, snippets: snippetsDe(liquid), oscuro: oscuro[tipo] ? { [tipo]: oscuro[tipo] } : {} }));

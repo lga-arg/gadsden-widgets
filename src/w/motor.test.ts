@@ -15,7 +15,7 @@ const secciones = { ...leerCarpeta("sections/"), ...propias };
 const propios = Object.fromEntries(readdirSync(new URL("snippets/", import.meta.url)).map((f) => [f.replace(".liquid", ""), readFileSync(new URL(`snippets/${f}`, import.meta.url), "utf8")]));
 const snippets = { ...propios, ...leerCarpeta("snippets/") };
 const json = (f: string) => JSON.parse(readFileSync(new URL(`config/${f}`, V), "utf8"));
-const settings = ajustesLiquid(json("defaults.json"), json("domu.json"));
+const settings = ajustesLiquid(json("defaults.json"), json("ajustes-oscuro.json"));
 const textos = { ...TEXTOS, ...json("es-gadsden.json") };
 const VACIAS = new Set(["gad-music-global", "gad-promo-popup", "gad-reviews-mini", "gad-reviews-wall"]);
 
