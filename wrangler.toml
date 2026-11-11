@@ -7,7 +7,7 @@ compatibility_date = "2026-09-21"
 [assets]
 directory = "./dist"
 binding = "ASSETS"
-run_worker_first = ["/callback", "/webhooks/*", "/productos/*", "/config/*", "/api/*", "/img/*"]
+run_worker_first = ["/callback", "/webhooks/*", "/productos/*", "/config/*", "/api/*", "/img/*", "/subir/*", "/vista"]
 
 # El secret CLIENT_SECRET va en .dev.vars (local) y con `npx wrangler secret put CLIENT_SECRET` (publicado).
 [vars]
@@ -19,3 +19,11 @@ SOPORTE_EMAIL = "admin@lga-arg.com"
 # wrangler crea el namespace en el primer deploy.
 [[kv_namespaces]]
 binding = "TOKENS"
+
+# Las subidas de los compradores (bloque "Personalizar con tu imagen", worker.ts): diez por minuto por IP y tienda.
+[[ratelimits]]
+name = "SUBIDAS"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 10
+  period = 60

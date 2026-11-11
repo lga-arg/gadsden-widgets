@@ -79,6 +79,16 @@ const CATEGORIA: Record<string, Categoria> = {
   button: "Básico", image: "Básico", video: "Básico", text_icons: "Básico", icons: "Básico", benefits: "Básico", feature: "Básico", urgency: "Básico",
   divider: "Diseño", jump: "Diseño", features: "Diseño", payment: "Diseño", stars: "Diseño", trustpilot: "Diseño", avatars: "Diseño",
 };
+/**
+ * Ajustes que en Tiendanube cambian de valor de fábrica o de ayuda. Popup promocional: el email no se guarda (la app no
+ * crea clientes), así que el formulario sale apagado y, si se prende, al enviarlo el comprador ve el cupón
+ * (src/w/pagina.ts).
+ */
+const AJUSTES_TN: Record<string, Record<string, Partial<Ajuste>>> = {
+  "gad-promo-popup": {
+    email_form: { default: false, info: "En Tiendanube el email no se guarda: al enviarlo, el comprador ve directo el cupón. Para juntar contactos, usá otra herramienta." },
+  },
+};
 /** Lo que no se ve fuera de Shopify (BUILD.md, "Lo que te falta", punto 6). */
 const AVISOS: Record<string, string> = {
   "gad-color-switcher": "Cambia los colores de toda la tienda: en Tiendanube sólo se ve el selector, no el cambio.",
@@ -111,8 +121,8 @@ function enTiendanube(a: Ajuste): Ajuste {
   }
   return x;
 }
-const adaptar = (e: Esquema): Esquema => ({
-  ...e, settings: e.settings?.map(enTiendanube),
+const adaptar = (e: Esquema, type = ""): Esquema => ({
+  ...e, settings: e.settings?.map(enTiendanube).map((a) => ({ ...a, ...(a.id && AJUSTES_TN[type]?.[a.id]) })),
   blocks: e.blocks?.map((b) => ({ ...b, settings: b.settings?.map(enTiendanube) })),
 });
 
@@ -120,7 +130,7 @@ export function armarCatalogo(secciones: Record<string, string>, bloques: Esquem
   const item = (clase: ItemCatalogo["clase"], type: string, esquema: Esquema): ItemCatalogo => {
     const fijo = FIJO[type];
     const lugares = fijo ? FIJOS : clase === "seccion" ? [...ANCHOS, ...COLUMNA] : [...COLUMNA, ...ANCHOS];
-    return { clase, type, nombre: esquema.name ?? type, esquema: adaptar(esquema), lugares, lugar: fijo ?? lugares[0]!, ...(AVISOS[type] && { aviso: AVISOS[type] }), ...(clase === "bloque" && { categoria: CATEGORIA[type] ?? "Otros" }) };
+    return { clase, type, nombre: esquema.name ?? type, esquema: adaptar(esquema, type), lugares, lugar: fijo ?? lugares[0]!, ...(AVISOS[type] && { aviso: AVISOS[type] }), ...(clase === "bloque" && { categoria: CATEGORIA[type] ?? "Otros" }) };
   };
   return [
     ...Object.entries(secciones).map(([type, liquid]) => item("seccion", type, esquemaDe(liquid))),

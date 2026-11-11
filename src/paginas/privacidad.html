@@ -21,7 +21,7 @@
 <img src="/icono.svg" alt="Gadsden Widgets" width="56" height="56" style="display:block; border-radius:12px; margin-bottom:16px">
 <!-- La sirve el Worker en /privacidad (construir.mjs la copia a dist/ con el correo de soporte de wrangler.toml). -->
 <h1>Política de privacidad</h1>
-<p class="fecha">Gadsden Widgets · Actualizada el 23 de octubre de 2026</p>
+<p class="fecha">Gadsden Widgets · Actualizada el 8 de noviembre de 2026</p>
 
 <p>Gadsden Widgets es una aplicación para tiendas de Tiendanube que suma secciones y bloques a la tienda (ofertas por cantidad, garantías, testimonios, preguntas frecuentes y otros). Esta página explica qué datos usa la aplicación, para qué y qué pasa con ellos cuando la desinstalás.</p>
 <p>La aplicación la ofrece LGA, desde Argentina.</p>
@@ -36,14 +36,15 @@
 
 <h2>Qué datos lee de tu tienda</h2>
 <ul>
-  <li><b>Productos</b>: nombre, precios, variantes, stock disponible, imágenes y metacampos, para dibujar los widgets con los datos reales. Se leen con el permiso de ver productos y quedan en memoria temporal (caché) unos minutos para no pedirlos en cada visita.</li>
+  <li><b>Productos</b>: nombre, precios, variantes, stock disponible, imágenes y metacampos, para dibujar los widgets con los datos reales. Se leen con el permiso de ver productos y quedan en memoria temporal (caché) hasta 6 horas para no pedirlos en cada visita; cuando un producto cambia en la tienda, Tiendanube le avisa a la app y la caché se renueva.</li>
   <li><b>La página pública de un producto</b>, para saber qué secciones tiene tu ficha y ofrecerte ubicar los widgets antes o después de cada una.</li>
   <li><b>El nombre, la dirección y la moneda de tu tienda</b>, que da el panel de Tiendanube al abrir la aplicación.</li>
 </ul>
 <p>La aplicación no modifica tus productos, pedidos ni clientes.</p>
 
 <h2>Datos de tus compradores</h2>
-<p>La aplicación no guarda datos personales de quienes visitan o compran en tu tienda. Los widgets se muestran en la página de tu tienda; cuando un comprador agrega un producto al carrito, lo agrega el carrito de tu tienda, como con el botón de compra del theme.</p>
+<p>La aplicación no guarda datos personales de quienes visitan o compran en tu tienda, salvo las imágenes que suben para personalizar un producto (abajo). Los widgets se muestran en la página de tu tienda; cuando un comprador agrega un producto al carrito, lo agrega el carrito de tu tienda, como con el botón de compra del theme.</p>
+<p>Si usás el widget «Personalizar con tu imagen», la imagen que sube un comprador se guarda hasta 90 días, para que la descargues desde el pedido, y después se borra sola. Antes de subirla, el widget la vuelve a codificar en el navegador del comprador: no se guardan sus metadatos (por ejemplo, el lugar donde se sacó una foto) ni van con su nombre o su correo.</p>
 <p>Algunos widgets recuerdan en el navegador del visitante cosas como que ya vio un popup o los colores que eligió en un selector de colores (almacenamiento local del navegador). Esa información queda en su navegador y no se envía a la aplicación.</p>
 <p>Si elegís una letra de Google Fonts o sumás un video de YouTube o Vimeo a un widget, el navegador del visitante los carga desde esos servicios, con sus propias políticas.</p>
 
@@ -51,7 +52,8 @@
 <p>Con nadie. Los datos se usan sólo para que funcionen tus widgets. Cloudflare los aloja como proveedor de infraestructura.</p>
 
 <h2>Cuando desinstalás la aplicación</h2>
-<p>Cuando Tiendanube avisa que se borren los datos de la tienda, la aplicación borra el permiso de acceso, la configuración de los widgets y las imágenes y videos que subiste. Los pedidos de datos o de borrado de compradores no tienen nada que borrar, porque la aplicación no los guarda.</p>
+<p>Cuando Tiendanube avisa que se borren los datos de la tienda, la aplicación borra el permiso de acceso, la configuración de los widgets y las imágenes y videos que subiste, y las imágenes que subieron tus compradores. Los pedidos de datos o de borrado de un comprador no tienen nada que borrar: la aplicación no guarda datos que lo identifiquen.</p>
+<p>Sólo queda, durante un año y para medir el uso de la aplicación, un registro con el número de la tienda, las fechas de instalación y desinstalación y qué tipos de widget tenía y en qué lugar. No incluye textos, imágenes, productos ni datos de contacto, y después del año se borra solo.</p>
 
 <h2>Contacto</h2>
 <p>Por cualquier consulta sobre tus datos, escribinos a <a href="mailto:{{SOPORTE}}">{{SOPORTE}}</a>. También podés ver la <a href="/soporte">página de soporte</a>.</p>

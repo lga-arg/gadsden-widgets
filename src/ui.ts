@@ -1,6 +1,6 @@
 /**
  * Las piezas comunes de los widgets, con los valores de Gadsden (assets/gadsden.css, gad-product.css y los .liquid gad-*
- * de horneroprep-theme; 1 rem de Dawn = 10 px). Los colores, la letra y los radios no van fijos: son las variables
+ * del theme Gadsden; 1 rem de Dawn = 10 px). Los colores, la letra y los radios no van fijos: son las variables
  * `--g-*` del estilo elegido (src/estilos.ts), que se ponen en la raíz de cada lugar. Donde Gadsden usa
  * `rgba(foreground, x)`, acá va `color-mix` del texto sobre el fondo.
  */

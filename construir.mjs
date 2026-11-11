@@ -4,6 +4,7 @@
 //   guarda el panel en KV y la sirve el Worker en /config/<id>.json; si no hay, sirve este archivo;
 // - dist/_headers: la tienda los carga desde otro origen (CORS) y en desarrollo no tienen que quedar en caché;
 // - dist/arnes/: el arnés para ver los widgets sin la tienda (arnes/index.html), con su copia del script;
+// - dist/medios/: los audios y videos que el onboarding manda por WhatsApp (medios/README.md);
 // - dist/panel/: el panel de la app en el admin de Tiendanube (src/panel/, React + Nimbus + Nexo) y su catálogo;
 // - dist/preview.js: la vista previa en la tienda real sin NubeSDK (src/vista.ts), sólo para probar;
 // - dist/editor.js: la vista previa del editor del panel (src/vista.ts con EDITOR), dentro de la página que trae el Worker;
@@ -29,6 +30,7 @@ await build({
   outfile: "dist/arnes/widgets.min.js", define: { BASE: '""' },
 });
 cpSync("arnes", "dist/arnes", { recursive: true });
+cpSync("medios", "dist/medios", { recursive: true });
 // La vista previa en la tienda real sin NubeSDK (el marcador del panel la carga desde el Worker).
 await build({ entryPoints: ["src/vista.ts"], bundle: true, format: "iife", minify: true, target: "es2020", outfile: "dist/preview.js", define: { BASE: JSON.stringify(base), PEGADO: "false", EDITOR: "false" } });
 // La vista previa del editor del panel: la página de la tienda que trae el Worker (/tienda/<id>/...), con la capa de edición.
@@ -77,8 +79,14 @@ writeFileSync("dist/w/fuentes/comun.json", JSON.stringify({
 for (const [tipo, liquid] of Object.entries(secciones)) {
   writeFileSync(`dist/w/fuentes/secciones/${tipo}.json`, JSON.stringify({ secciones: { [tipo]: liquid }, snippets: snippetsDe(liquid), oscuro: oscuro[tipo] ? { [tipo]: oscuro[tipo] } : {} }));
 }
+// Los bloques de Gadsden y los propios (src/w/bloques.json, como el de personalizar con una imagen): un bloque propio se
+// dibuja con su snippet gad-block-<tipo> de src/w/snippets/, no con gad-product-block.
+const bloques = [...json("bloques.json"), ...JSON.parse(readFileSync("src/w/bloques.json", "utf8"))];
 const deLosBloques = snippetsDe("{% render 'gad-product-block' %}");
-for (const b of json("bloques.json")) writeFileSync(`dist/w/fuentes/bloques/${b.type}.json`, JSON.stringify({ snippets: deLosBloques, bloques: [b] }));
+for (const b of bloques) {
+  const propio = `gad-block-${b.type}` in snippets;
+  writeFileSync(`dist/w/fuentes/bloques/${b.type}.json`, JSON.stringify({ snippets: propio ? snippetsDe(`{% render 'gad-block-${b.type}' %}`) : deLosBloques, bloques: [b] }));
+}
 mkdirSync("dist/w/a", { recursive: true });
 for (const f of readdirSync(V + "assets")) copyFileSync(V + "assets/" + f, "dist/w/a/" + f);
 copyFileSync("src/w/base.css", "dist/w/a/base.css");
@@ -96,7 +104,7 @@ await build({
 copyFileSync("src/panel/index.html", "dist/panel/index.html");
 cpSync("src/panel/miniaturas", "dist/panel/miniaturas", { recursive: true });
 // El catálogo en español y en portugués (src/panel/catalogo.pt.json; el panel pide el del idioma de la tienda).
-const catalogo = armarCatalogo(secciones, json("bloques.json"));
+const catalogo = armarCatalogo(secciones, bloques);
 writeFileSync("dist/panel/catalogo.json", JSON.stringify(catalogo));
 writeFileSync("dist/panel/catalogo.pt.json", JSON.stringify(traducirCatalogo(catalogo, JSON.parse(readFileSync("src/panel/catalogo.pt.json", "utf8")), "pt")));
 mkdirSync("dist/config", { recursive: true });

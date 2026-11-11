@@ -21,7 +21,7 @@
 <img src="/icono.svg" alt="Gadsden Widgets" width="56" height="56" style="display:block; border-radius:12px; margin-bottom:16px">
 <!-- La de /privacidad en portugués (Nuvemshop): la sirve el Worker en /pt/privacidad (construir.mjs, con el correo de soporte). -->
 <h1>Política de privacidade</h1>
-<p class="fecha">Gadsden Widgets · Atualizada em 23 de outubro de 2026</p>
+<p class="fecha">Gadsden Widgets · Atualizada em 8 de novembro de 2026</p>
 
 <p>O Gadsden Widgets é um aplicativo para lojas Nuvemshop que adiciona seções e blocos à loja (ofertas por quantidade, garantias, depoimentos, perguntas frequentes e outros). Esta página explica quais dados o aplicativo usa, para quê e o que acontece com eles quando você o desinstala.</p>
 <p>O aplicativo é oferecido pela LGA, da Argentina.</p>
@@ -36,14 +36,15 @@
 
 <h2>Quais dados lê da sua loja</h2>
 <ul>
-  <li><b>Produtos</b>: nome, preços, variações, estoque disponível, imagens e metacampos, para desenhar os widgets com os dados reais. São lidos com a permissão de ver produtos e ficam em memória temporária (cache) por alguns minutos para não serem pedidos a cada visita.</li>
+  <li><b>Produtos</b>: nome, preços, variações, estoque disponível, imagens e metacampos, para desenhar os widgets com os dados reais. São lidos com a permissão de ver produtos e ficam em memória temporária (cache) por até 6 horas para não serem pedidos a cada visita; quando um produto muda na loja, a Nuvemshop avisa o app e o cache é renovado.</li>
   <li><b>A página pública de um produto</b>, para saber quais seções a página do seu produto tem e oferecer posicionar os widgets antes ou depois de cada uma.</li>
   <li><b>O nome, o endereço e a moeda da sua loja</b>, que o painel da Nuvemshop entrega ao abrir o aplicativo.</li>
 </ul>
 <p>O aplicativo não modifica seus produtos, pedidos nem clientes.</p>
 
 <h2>Dados dos seus clientes</h2>
-<p>O aplicativo não guarda dados pessoais de quem visita ou compra na sua loja. Os widgets aparecem na página da sua loja; quando um cliente adiciona um produto ao carrinho, quem o adiciona é o carrinho da sua loja, como com o botão de compra do layout.</p>
+<p>O aplicativo não guarda dados pessoais de quem visita ou compra na sua loja, exceto as imagens que enviam para personalizar um produto (abaixo). Os widgets aparecem na página da sua loja; quando um cliente adiciona um produto ao carrinho, quem o adiciona é o carrinho da sua loja, como com o botão de compra do layout.</p>
+<p>Se você usar o widget «Personalizar com a sua imagem», a imagem que um cliente envia fica guardada por até 90 dias, para que você a baixe a partir do pedido, e depois é apagada sozinha. Antes do envio, o widget a recodifica no navegador do cliente: os metadados (por exemplo, o lugar onde uma foto foi tirada) não são guardados, e ela não vai com o nome nem o e-mail dele.</p>
 <p>Alguns widgets lembram no navegador do visitante coisas como que ele já viu um pop-up ou as cores que escolheu em um seletor de cores (armazenamento local do navegador). Essa informação fica no navegador dele e não é enviada ao aplicativo.</p>
 <p>Se você escolher uma fonte do Google Fonts ou adicionar um vídeo do YouTube ou do Vimeo a um widget, o navegador do visitante os carrega desses serviços, com suas próprias políticas.</p>
 
@@ -51,7 +52,8 @@
 <p>Com ninguém. Os dados são usados só para que seus widgets funcionem. A Cloudflare os hospeda como fornecedora de infraestrutura.</p>
 
 <h2>Quando você desinstala o aplicativo</h2>
-<p>Quando a Nuvemshop avisa que os dados da loja devem ser apagados, o aplicativo apaga a permissão de acesso, a configuração dos widgets e as imagens e vídeos que você enviou. Os pedidos de dados ou de exclusão de clientes não têm nada a apagar, porque o aplicativo não os guarda.</p>
+<p>Quando a Nuvemshop avisa que os dados da loja devem ser apagados, o aplicativo apaga a permissão de acesso, a configuração dos widgets e as imagens e vídeos que você enviou, e as imagens que seus clientes enviaram. Os pedidos de dados ou de exclusão de um cliente não têm nada a apagar: o aplicativo não guarda dados que o identifiquem.</p>
+<p>Fica apenas, durante um ano e para medir o uso do aplicativo, um registro com o número da loja, as datas de instalação e desinstalação e quais tipos de widget ela tinha e em que lugar. Não inclui textos, imagens, produtos nem dados de contato, e depois de um ano é apagado automaticamente.</p>
 
 <h2>Contato</h2>
 <p>Para qualquer dúvida sobre seus dados, escreva para <a href="mailto:{{SOPORTE}}">{{SOPORTE}}</a>. Você também pode ver a <a href="/pt/soporte">página de suporte</a>.</p>

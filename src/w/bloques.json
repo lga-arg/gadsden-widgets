@@ -1,0 +1,73 @@
+[
+  {
+    "type": "design_upload",
+    "name": "Personalizar con tu imagen",
+    "settings": [
+      {
+        "type": "text",
+        "id": "label",
+        "label": "Título",
+        "default": "Personalizalo con tu imagen"
+      },
+      {
+        "type": "text",
+        "id": "help",
+        "label": "Texto de ayuda",
+        "default": "JPG, PNG o WebP, hasta 10 MB. Movela, girala y agrandala dentro de la zona de impresión."
+      },
+      {
+        "type": "image_picker",
+        "id": "mockup",
+        "label": "Imagen de fondo",
+        "info": "Vacía: se usa la foto del producto (la de la variante elegida)."
+      },
+      {
+        "type": "range",
+        "id": "zona_x",
+        "min": 0,
+        "max": 90,
+        "step": 1,
+        "unit": "%",
+        "label": "Zona de impresión: distancia desde la izquierda",
+        "default": 30
+      },
+      {
+        "type": "range",
+        "id": "zona_y",
+        "min": 0,
+        "max": 90,
+        "step": 1,
+        "unit": "%",
+        "label": "Zona de impresión: distancia desde arriba",
+        "default": 22
+      },
+      {
+        "type": "range",
+        "id": "zona_ancho",
+        "min": 10,
+        "max": 100,
+        "step": 1,
+        "unit": "%",
+        "label": "Zona de impresión: ancho",
+        "default": 40
+      },
+      {
+        "type": "range",
+        "id": "zona_alto",
+        "min": 10,
+        "max": 100,
+        "step": 1,
+        "unit": "%",
+        "label": "Zona de impresión: alto",
+        "default": 45
+      },
+      {
+        "type": "text",
+        "id": "propiedad",
+        "label": "Nombre con el que llega en el pedido",
+        "default": "Diseño",
+        "info": "En el pedido llegan el link al archivo original y otro a la vista previa."
+      }
+    ]
+  }
+]

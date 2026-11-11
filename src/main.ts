@@ -76,7 +76,7 @@ async function otraPagina(nube: NubeSDK, s: Readonly<NubeSDKState>, cfg: Config)
   for (const w of sueltos) {
     const g = widgetGadsden(nube, junto.get(w)?.length ? { ...w, junto: junto.get(w) } : w, {
       variante: undefined, tienda: s.store.id, pagina, estilo: estiloDe(cfg.estilo), tema: cfg.tema,
-      moneda: { simbolo: "$", codigo: s.store.currency_details?.code || s.store.currency || "ARS" }, lugar: lugarDe(w),
+      moneda: { simbolo: "$", codigo: s.store.currency_details?.code || s.store.currency || "ARS" }, lugar: lugarDe(w), idioma: s.store.language,
       agregar: (items) => { nube.send("cart:add", () => ({ cart: { items } })); nube.send("cart:open"); },
       compra: () => {},
     });
@@ -111,7 +111,7 @@ async function ficha(nube: NubeSDK, s: Readonly<NubeSDKState>, cfg: Config) {
   const iframe = (w: Extract<Widget, { tipo: "gadsden" }>): Dibujo => {
     const g = widgetGadsden(nube, w, {
       producto, variante: variante?.id, tienda: s.store.id, pagina, estilo: estiloDe(cfg.estilo), tema: cfg.tema,
-      moneda: { simbolo: "$", codigo: s.store.currency_details?.code || s.store.currency || "ARS" },
+      moneda: { simbolo: "$", codigo: s.store.currency_details?.code || s.store.currency || "ARS" }, idioma: s.store.language,
       agregar: (items, pago) => ctx.agregar(items, pago), lugar: w.lugar || LUGAR.gadsden, compra,
     });
     avisos.push(g.avisarVariante);
@@ -181,9 +181,12 @@ async function ficha(nube: NubeSDK, s: Readonly<NubeSDKState>, cfg: Config) {
   nube.on("cart:update", () => { setTimeout(() => { antes = lineas(nube.getState().cart); }, 2000); });
   let despues: "carrito" | "pago" | null = null;
   let nuestros: { variante: number; hasta: number }[] = [];
+  // Lo que mandó la app y todavía no pasó por cart:before_update (abajo): pasa sin frenarse.
+  let soltar = 0, soltarHasta = 0;
   const mandar = (items: ItemCarrito[]) => {
     const hasta = Date.now() + 10000;
     nuestros.push(...items.map((x) => ({ variante: x.variant_id, hasta })));
+    soltar += items.length; soltarHasta = hasta;
     nube.send("cart:add", () => ({ cart: { items } }));
   };
   nube.on("cart:add:success", (st) => {
@@ -201,7 +204,9 @@ async function ficha(nube: NubeSDK, s: Readonly<NubeSDKState>, cfg: Config) {
     else if (despues) nube.send("cart:open");
     despues = null;
   });
-  nube.on("cart:add:fail", () => { despues = null; });
+  // El agregado del theme que frena la app (abajo) puede avisar que falló: no cancela lo que la app manda en su lugar.
+  let frenadoHasta = 0;
+  nube.on("cart:add:fail", () => { if (Date.now() > frenadoHasta) despues = null; });
 
   /**
    * La compra del botón del theme, como la mandaba el formulario de Shopify con los bloques de la ficha: la cantidad o
@@ -226,24 +231,48 @@ async function ficha(nube: NubeSDK, s: Readonly<NubeSDKState>, cfg: Config) {
     cantidadTheme = (p.type === "product" && Number(p.data.product.quantity)) || Number(st.eventPayload?.quantity) || 1;
     avisarCantidad();
   });
-  function completar(l: Linea) {
+  /** Lo que cargó el comprador en los bloques (un campo, la imagen de "Personalizar"), sin las propiedades ocultas. */
+  const propiedades = () => Object.fromEntries(Object.entries(Object.assign({}, ...[...compras.values()].map((c) => c.propiedades)) as Record<string, string>).filter(([k, x]) => !k.startsWith("_") && x !== ""));
+  /**
+   * La compra del theme completada con lo de los bloques: las unidades de una oferta que faltan y, con `frenada`, todas,
+   * porque el agregado del theme se frenó (abajo) y lo manda la app con las propiedades.
+   */
+  function completar(l: Linea, frenada = false) {
     if (l.product_id !== producto.id) return;
     const v = l.variant_id, q = l.quantity;
-    // Lo que escribió el comprador (un campo) va en las unidades que suma la app y como dato adicional del pedido; la
-    // línea del theme no se toca (sacarla y agregarla de nuevo borraba unidades). [VERIFICAR] en un checkout que
-    // `order:add:extra` desde la ficha quede en el pedido.
-    const props = Object.fromEntries(Object.entries(Object.assign({}, ...[...compras.values()].map((c) => c.propiedades)) as Record<string, string>).filter(([k, x]) => !k.startsWith("_") && x !== ""));
+    const props = propiedades();
     const deseado = oferta()?.items ?? [{ variant_id: v, quantity: q }];
     const cuenta = new Map<number, number>();
     for (const x of deseado) cuenta.set(x.variant_id, (cuenta.get(x.variant_id) ?? 0) + x.quantity);
-    cuenta.set(v, (cuenta.get(v) ?? 0) - q);
+    if (!frenada) cuenta.set(v, (cuenta.get(v) ?? 0) - q);
     const conProps = Object.keys(props).length ? { properties: props } : {};
     const faltan = [...cuenta].filter(([, n]) => n > 0).map(([variant_id, quantity]) => ({ product_id: producto.id, variant_id, quantity, ...conProps }));
+    // Frenado, el theme no abre su carrito: lo abre la app cuando entra lo suyo.
+    if (frenada) { despues = "carrito"; frenadoHasta = Date.now() + 5000; }
     if (faltan.length) mandar(faltan);
     for (const avisar of todos) avisar({ gadsden: "comprado", id: v });
-    // Al final y sin frenar la compra: en la ficha todavía no hay pedido y la tienda puede rechazarlo.
-    if (Object.keys(props).length) try { nube.send("order:add:extra", () => ({ order: { extra: props } })); } catch (e) { console.log("[Gadsden] order:add:extra", String(e)); }
   }
+  /**
+   * El pedido sólo guarda lo que va en la línea del carrito, y NubeSDK no deja ponerle propiedades a la que agrega el
+   * botón del theme: con lo de un bloque cargado, la app frena ese agregado (cart:before_update) y lo manda ella con las
+   * propiedades, como recomienda la doc de NubeSDK (eventos de carrito, 3-nov). Antes iba como order:add:extra, que sólo
+   * anda en el checkout: en el pedido de prueba #109 de lgademo (1 unidad, sin oferta) no llegó nada. Lo que agrega la
+   * app (`nuestros`) pasa siempre.
+   */
+  nube.send("config:set", () => ({ config: { handle_cart_before_update: true } }));
+  nube.on("cart:before_update", (st) => {
+    const x = st.eventPayload as { request_id?: string; action?: string; item?: { product_id: number | string } } | null;
+    if (!x?.request_id) return;
+    // El aviso no dice la variante (variant_id: null, medido en lgademo el 3-nov) ni distingue quién agrega: lo de la app
+    // se cuenta al mandarlo (`soltar`) y pasa. Un segundo aviso del mismo clic (no pasó en las pruebas) se frena sin volver
+    // a agregar.
+    const deLaApp = x.action === "ADD" && soltar > 0 && Date.now() < soltarHasta;
+    if (deLaApp) soltar--;
+    const frenar = !deLaApp && x.action === "ADD" && Number(x.item?.product_id) === producto.id && Object.keys(propiedades()).length > 0;
+    const repetido = frenar && Date.now() < frenadoHasta;
+    nube.send("cart:before_update:result", () => ({ eventPayload: { request_id: x.request_id, proceed: !frenar, ...(frenar && { reason: "Gadsden: la línea va con lo que cargó el comprador" }) } }));
+    if (frenar && !repetido && variante) completar({ product_id: producto.id, variant_id: variante.id, quantity: cantidadTheme }, true);
+  });
 
   // La raíz de cada lugar lleva las variables del estilo (--g-*) que leen todas las piezas.
   const Raiz = styled(box)`${cssDe(cfg.estilo ?? "tienda")}`;

@@ -25,7 +25,9 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, .18); will-change: transform;
   }
   #ct-cov-{{ section.id }} .ct-cov__card video,
-  #ct-cov-{{ section.id }} .ct-cov__card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+  #ct-cov-{{ section.id }} .ct-cov__card img,
+  #ct-cov-{{ section.id }} .ct-cov__card svg.placeholder-svg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+  #ct-cov-{{ section.id }} .ct-cov__card svg.placeholder-svg { background: #E4E3DE; fill: rgba(11, 11, 11, .35); }
   #ct-cov-{{ section.id }} .ct-cov__info {
     position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 12px 12px; color: #fff;
     background: linear-gradient(to top, rgba(11, 11, 11, .85), rgba(11, 11, 11, 0));
@@ -54,18 +56,20 @@
     {%- for b in section.blocks -%}
       {%- liquid
         assign n = forloop.index
+        assign poster = blank
         if b.settings.poster != blank
           assign poster = b.settings.poster | image_url: width: 500
-        else
-          assign poster = 'ct-cover-' | append: n | append: '.jpg' | asset_url
         endif
       -%}
       <div class="ct-cov__item" data-item {{ b.shopify_attributes }}>
         <div class="ct-cov__card">
           {%- if b.settings.video != blank -%}
             {{ b.settings.video | video_tag: muted: true, loop: true, playsinline: true, preload: 'metadata', image_size: '500x' }}
+          {%- elsif poster != blank -%}
+            <img src="{{ poster }}" alt="{{ b.settings.poster.alt | escape }}" width="{{ b.settings.poster.width }}" height="{{ b.settings.poster.height }}" loading="lazy">
           {%- else -%}
-            <video src="{{ 'ct-cover-' | append: n | append: '.mp4' | asset_url }}" poster="{{ poster }}" muted loop playsinline preload="metadata"></video>
+            {%- assign ph = n | modulo: 2 | plus: 1 -%}
+            {{ 'lifestyle-' | append: ph | placeholder_svg_tag: 'placeholder-svg' }}
           {%- endif -%}
           {%- if b.settings.quote != blank or b.settings.name != blank -%}
             <div class="ct-cov__info">
@@ -197,7 +201,7 @@
   "max_blocks": 24,
   "settings": [
     { "type": "range", "id": "play_range", "label": "Videos que se reproducen a cada lado del centro", "min": 0, "max": 3, "step": 1, "default": 3, "info": "0 = sólo el del centro · 1 = tres videos · 3 = todos los que se ven" },
-    { "type": "paragraph", "content": "OJO: los videos por defecto son recortes de los ads propios y los textos son DUMMY. Reemplazar por videos y testimonios reales." },
+    { "type": "paragraph", "content": "Sin video, cada tarjeta muestra su portada (o un placeholder). Reemplazá los textos de ejemplo por testimonios reales." },
     { "type": "text", "id": "heading", "label": "Titular", "default": "Mirá cómo les fue" },
     {
       "type": "select", "id": "heading_size", "label": "Tamaño del titular", "default": "h2",
@@ -214,7 +218,7 @@
       "type": "video",
       "name": "Video",
       "settings": [
-        { "type": "video", "id": "video", "label": "Video", "info": "Vacío = assets/ct-cover-N.mp4 (b-roll UGC hecho con IA)" },
+        { "type": "video", "id": "video", "label": "Video", "info": "Vacío = se muestra la portada" },
         { "type": "image_picker", "id": "poster", "label": "Imagen de portada" },
         { "type": "range", "id": "stars", "label": "Estrellas (0 = sin)", "min": 0, "max": 5, "step": 1, "default": 5 },
         { "type": "text", "id": "quote", "label": "Frase" },

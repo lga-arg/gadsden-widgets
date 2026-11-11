@@ -3,18 +3,12 @@
   assign s = section.settings
   if s.bg_image != blank
     assign bg = s.bg_image | image_url: width: 1500
-  else
-    assign bg = 'ct-hero-bg.jpg' | asset_url
   endif
   if s.antes_image != blank
     assign antes = s.antes_image | image_url: width: 700
-  else
-    assign antes = 'ct-hero-antes.jpg' | asset_url
   endif
   if s.despues_image != blank
     assign despues = s.despues_image | image_url: width: 700
-  else
-    assign despues = 'ct-hero-despues.jpg' | asset_url
   endif
   assign palabras = s.words | split: ','
 -%}
@@ -31,7 +25,7 @@
   #ct-hero-{{ section.id }} .ct-hero__bg {
     display: block; position: absolute; left: -16px; right: -16px; top: {{ s.bg_offset }}px; z-index: -1;
     aspect-ratio: {{ s.bg_ratio }};
-    background: url('{{ bg }}') center top / 100% auto no-repeat;
+    {% if bg != blank %}background: url('{{ bg }}') center top / 100% auto no-repeat;{% endif %}
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 38%, transparent 62%);
             mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 38%, transparent 62%);
     will-change: transform;
@@ -46,7 +40,10 @@
     position: relative; margin: 0; height: {{ s.fotos_height }}vh; min-height: 96px; border-radius: 12px; overflow: hidden;
     background: #fff; box-shadow: 0 8px 24px rgba(11, 11, 11, .12);
   }
-  #ct-hero-{{ section.id }} .ct-hero__foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #ct-hero-{{ section.id }} .ct-hero__foto img,
+  #ct-hero-{{ section.id }} .ct-hero__foto svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+  
+  #ct-hero-{{ section.id }} .ct-hero__bg > svg { display: none; width: 100%; height: 100%; }
   #ct-hero-{{ section.id }} .ct-hero__foto figcaption {
     position: absolute; left: 6px; top: 6px; padding: 2px 8px; border-radius: 100px;
     font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
@@ -106,6 +103,7 @@
       grid-column: 1; grid-row: 2; z-index: 1; width: auto; margin: 0 20px 20px; align-self: end;
     }
     #ct-hero-{{ section.id }} .ct-hero__foto { height: 150px; }
+    #ct-hero-{{ section.id }} .ct-hero__bg > svg { display: block; border-radius: inherit; }
     #ct-hero-{{ section.id }} .ct-hero__hueco { display: none; }
     #ct-hero-{{ section.id }} .ct-hero__texto { grid-column: 2; grid-row: 1 / 3; align-self: center; }
     #ct-hero-{{ section.id }} .ct-hero__cap { font-size: 14px; }
@@ -124,14 +122,22 @@
 <section id="ct-hero-{{ section.id }}" class="ct-hero" data-fondo-img="{{ bg }}" data-velocidad="{{ s.parallax_speed | divided_by: 100.0 }}"
   data-intervalo="{{ s.rotate_speed | times: 100 }}">
   <div class="ct-hero__wrap">
-    <div class="ct-hero__bg" aria-hidden="true"></div>
+    <div class="ct-hero__bg" aria-hidden="true">{% if bg == blank %}{{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}{% endif %}</div>
     <div class="ct-hero__fotos">
       <figure class="ct-hero__foto">
-        <img src="{{ antes }}" alt="{{ s.antes_label | escape }}" width="400" height="225" fetchpriority="high">
+        {%- if antes != blank -%}
+          <img src="{{ antes }}" alt="{{ s.antes_label | escape }}" width="400" height="225" fetchpriority="high">
+        {%- else -%}
+          {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+        {%- endif -%}
         <figcaption>{{ s.antes_label }}</figcaption>
       </figure>
       <figure class="ct-hero__foto ct-hero__foto--despues">
-        <img src="{{ despues }}" alt="{{ s.despues_label | escape }}" width="400" height="225" fetchpriority="high">
+        {%- if despues != blank -%}
+          <img src="{{ despues }}" alt="{{ s.despues_label | escape }}" width="400" height="225" fetchpriority="high">
+        {%- else -%}
+          {{ 'lifestyle-2' | placeholder_svg_tag: 'placeholder-svg' }}
+        {%- endif -%}
         <figcaption>{{ s.despues_label }}</figcaption>
       </figure>
     </div>
@@ -215,7 +221,7 @@
         cuadro();
       } catch (e) { px = null; } // sin CORS: los textos quedan con su color
     };
-    foto.src = raiz.dataset.fondoImg;
+    if (raiz.dataset.fondoImg) foto.src = raiz.dataset.fondoImg;
     // máscara del fondo: transparente 0% → opaca 12%-38% → transparente 62% (igual que el CSS)
     const mascara = (v) => v <= 0 || v >= .62 ? 0 : v < .12 ? v / .12 : v <= .38 ? 1 : (.62 - v) / .24;
     // luminancia relativa (WCAG): canales linealizados
@@ -282,14 +288,14 @@
   "class": "section",
   "settings": [
     { "type": "header", "content": "Antes / después" },
-    { "type": "image_picker", "id": "antes_image", "label": "Foto antes", "info": "Vacío = placeholder de stock (assets/ct-hero-antes.jpg). Reemplazar por una foto real." },
+    { "type": "image_picker", "id": "antes_image", "label": "Foto antes", "info": "Vacío = placeholder" },
     { "type": "text", "id": "antes_label", "label": "Etiqueta antes", "default": "Antes" },
-    { "type": "image_picker", "id": "despues_image", "label": "Foto después", "info": "Vacío = placeholder de stock (assets/ct-hero-despues.jpg). Reemplazar por una foto real." },
+    { "type": "image_picker", "id": "despues_image", "label": "Foto después", "info": "Vacío = placeholder" },
     { "type": "text", "id": "despues_label", "label": "Etiqueta después", "default": "Después" },
     { "type": "range", "id": "fotos_width", "label": "Ancho de las fotos", "min": 30, "max": 100, "step": 5, "unit": "%", "default": 100 },
     { "type": "range", "id": "fotos_height", "label": "Alto de las fotos", "min": 10, "max": 40, "step": 1, "unit": "vh", "default": 15, "info": "Porcentaje del alto de la pantalla" },
     { "type": "header", "content": "Fondo" },
-    { "type": "image_picker", "id": "bg_image", "label": "Imagen de fondo", "info": "Vacío = assets/ct-hero-bg.jpg" },
+    { "type": "image_picker", "id": "bg_image", "label": "Imagen de fondo", "info": "Vacío = placeholder en escritorio, nada en el celular" },
     { "type": "range", "id": "bg_offset", "label": "Bajar el fondo", "min": 0, "max": 400, "step": 10, "unit": "px", "default": 0, "info": "Para que la boca quede entre las fotos y el texto" },
     { "type": "text", "id": "bg_ratio", "label": "Proporción de la imagen de fondo", "default": "752 / 1344", "info": "ancho / alto de la imagen" },
     { "type": "range", "id": "parallax_speed", "label": "Parallax", "min": 0, "max": 50, "step": 5, "default": 25, "info": "0 = sin parallax" },

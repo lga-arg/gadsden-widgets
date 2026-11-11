@@ -169,6 +169,16 @@ document.addEventListener("submit", (e) => {
     }, 0);
     return;
   }
+  // El formulario del popup promocional (gad-promo-popup): en Tiendanube el email no tiene a dónde ir (la app no crea
+  // clientes ni guarda datos de compradores). En Shopify, al volver de suscribirse, el popup muestra el éxito con el
+  // cupón; acá se muestra al enviar, sin mandar nada.
+  const oferta = f.closest<HTMLElement>("[data-gad-promo-offer]");
+  if (oferta) {
+    e.preventDefault();
+    const exito = oferta.parentElement?.querySelector<HTMLElement>("[data-gad-promo-success]");
+    if (exito) { oferta.hidden = true; exito.hidden = false; }
+    return;
+  }
   // Los otros formularios de Shopify (suscripción de clientes, contacto) no tienen a dónde ir en Tiendanube: enviados,
   // recargarían el iframe sin su configuración.
   if (!/\/cart\/add/.test(f.getAttribute("action") ?? "")) { if (f.getAttribute("action") === "#") e.preventDefault(); return; }
@@ -408,7 +418,9 @@ async function dibujar(primera: boolean) {
       const block = armarBloque(cfg.bloque, fuentes.bloques, buscar);
       await fuentesDinamicas(block.settings);
       const section = { id: "template--gadsden__main", settings: {}, blocks: [block] };
-      salida = await render("gad-product-block", "{%- render 'gad-product-block', block: block, product: product, section: section, product_form_id: 'product-form-main' -%}", { ...contexto, block, section });
+      // Un bloque propio (construir.mjs) trae su snippet gad-block-<tipo>; los de Gadsden van por gad-product-block.
+      const plantilla = `gad-block-${block.type}` in fuentes.snippets ? `gad-block-${block.type}` : "gad-product-block";
+      salida = await render(plantilla, `{%- render '${plantilla}', block: block, product: product, section: section, product_form_id: 'product-form-main' -%}`, { ...contexto, block, section });
       salida.html = `<div id="shopify-section-${section.id}" class="shopify-section"><div class="product__info-container"><form id="product-form-main" action="/cart/add" method="post" data-type="add-to-cart-form"><input type="hidden" name="id" value="${product?.selected_or_first_available_variant?.id ?? ""}"><input type="hidden" name="quantity" value="1"></form>${salida.html}${cfg.fijo ? `<div id="ProductSubmitButton-${section.id}" hidden></div>` : ""}</div></div>`;
     } else return null;
     return { deLaPagina, salida };

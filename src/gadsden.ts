@@ -96,7 +96,7 @@ export type Compra = { items: { variant_id: number; quantity: number }[]; propie
 
 /** Un widget de Gadsden como Iframe. Se arma una vez: el mismo componente en cada dibujo (identidad estable). */
 export function widgetGadsden(nube: NubeSDK, w: ConfigGadsden, ctx: {
-  producto?: ProductDetails; variante: number | undefined; tienda: number; estilo: string; tema?: Tema; pagina: ConfigGadsden["seccion"][]; moneda: { simbolo: string; codigo: string }; lugar: string;
+  producto?: ProductDetails; variante: number | undefined; tienda: number; estilo: string; tema?: Tema; pagina: ConfigGadsden["seccion"][]; moneda: { simbolo: string; codigo: string }; lugar: string; idioma?: string;
   agregar: (items: { product_id: number; variant_id: number; quantity: number; properties?: Record<string, string> }[], pago?: boolean) => void;
   /** Lo que mandaría el formulario de compra con lo elegido en el bloque (src/w/pagina.ts, informarCompra). */
   compra: (de: object, c: Compra) => void;
@@ -104,7 +104,7 @@ export function widgetGadsden(nube: NubeSDK, w: ConfigGadsden, ctx: {
   const cfg = {
     // inicio: el reloj del script (el Web Worker de NubeSDK), lo más cerca de la carga de la página que se puede saber.
     // [VERIFICAR] en la tienda cuánto después de la carga arranca el Worker.
-    seccion: w.seccion, bloque: w.bloque, ...(w.junto?.length && { junto: w.junto }), inicio: Math.round(performance.timeOrigin), pagina: ctx.pagina, estilo: ctx.estilo, ...(ctx.tema && { tema: ctx.tema }), ...(ctx.producto && { producto: productoParaIframe(ctx.producto) }), variante: ctx.variante, moneda: ctx.moneda, tienda: ctx.tienda,
+    seccion: w.seccion, bloque: w.bloque, ...(w.junto?.length && { junto: w.junto }), inicio: Math.round(performance.timeOrigin), pagina: ctx.pagina, estilo: ctx.estilo, ...(ctx.tema && { tema: ctx.tema }), ...(ctx.producto && { producto: productoParaIframe(ctx.producto) }), variante: ctx.variante, moneda: ctx.moneda, tienda: ctx.tienda, ...(ctx.idioma && ctx.idioma !== "es" && { idioma: ctx.idioma }),
     // En un lugar fijo (corner_*, edge_*) el iframe mide lo que ocupan sus elementos fijos (src/w/pagina.ts).
     ...(/^(corner|edge)_/.test(ctx.lugar) && { fijo: ctx.lugar }),
     // El ancho de la pantalla de la tienda (la ventana, en un celular): con él se miden los lugares fijos y los popups.

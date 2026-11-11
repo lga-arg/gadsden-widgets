@@ -4,7 +4,8 @@
  *   `code` por un token. El token se guarda en KV (TOKENS, clave: el id de la tienda) para leer otros productos y sus
  *   metacampos con la API; nunca se loguea ni sale del Worker.
  * - /productos/<tienda>?handles=a,b&metacampos=<id de la ficha>: los otros productos que piden los widgets y los
- *   metacampos, leídos con ese token (src/api.ts). Cinco minutos en la caché de Cloudflare.
+ *   metacampos, leídos con ese token (src/api.ts). Quedan en KV seis horas y los vacían los webhooks de productos
+ *   (/webhooks/productos) o guardar en el panel: la homologación (29-oct) frenó por pedidos repetidos a la API.
  * - /config/<tienda>.json: la configuración de los widgets de la tienda, la que lee el script de NubeSDK. La guarda el
  *   panel en KV (clave `config:<tienda>`); si no hay, 404 (sin widgets).
  * - /api/*: el panel (dist/panel/, dentro del admin de Tiendanube con Nexo). Cada pedido lleva el token de sesión de
@@ -14,11 +15,13 @@
  *   edición; tiendaEnEditor).
  * - /webhooks/store-redact, /customers-redact, /customers-data-request: obligatorios, con la firma de Tiendanube
  *   (x-linkedstore-hmac-sha256). Al desinstalar, store-redact borra el token; de compradores no se guarda nada.
+ *   Antes de borrar deja `baja:<tienda>:<fecha>` (un año): fechas de alta y baja y qué widgets tenía y dónde, sin
+ *   textos ni imágenes, para saber qué llegó a usar (`npx wrangler kv key list --binding TOKENS --remote --prefix baja:`).
  */
 type KV = {
   get(k: string): Promise<string | null>;
   getWithMetadata<M>(k: string, tipo: "arrayBuffer"): Promise<{ value: ArrayBuffer | null; metadata: M | null }>;
-  put(k: string, v: string | ArrayBuffer, op?: { metadata?: unknown }): Promise<void>;
+  put(k: string, v: string | ArrayBuffer, op?: { metadata?: unknown; expirationTtl?: number }): Promise<void>;
   delete(k: string): Promise<void>;
   list(op: { prefix: string; cursor?: string }): Promise<{ keys: { name: string }[]; list_complete: boolean; cursor?: string }>;
 };
@@ -27,9 +30,27 @@ import { tiendaDeSesion } from "./src/sesion.ts";
 import { seccionesDelHtml } from "./src/lugares.ts";
 
 /** SESION_DESARROLLO = "1": acepta también los tokens del modo desarrollador del portal (firmados con "THE_SECRET"). */
-interface Env { ASSETS: { fetch: (r: Request) => Promise<Response> }; CLIENT_ID: string; CLIENT_SECRET?: string; SESION_DESARROLLO?: string; TOKENS: KV }
+/** ONBOARDING_URL y ONBOARDING_SECRET (secretos de Cloudflare): el webhook de n8n del onboarding (docs/onboarding-whatsapp.md). */
+/** SUBIDAS: el límite de subidas de compradores (wrangler.toml, ratelimits). */
+interface Env { ASSETS: { fetch: (r: Request) => Promise<Response> }; CLIENT_ID: string; CLIENT_SECRET?: string; SESION_DESARROLLO?: string; TOKENS: KV; ONBOARDING_URL?: string; ONBOARDING_SECRET?: string; SUBIDAS?: { limit(o: { key: string }): Promise<{ success: boolean }> } }
 
-const WEBHOOKS = new Set(["/webhooks/store-redact", "/webhooks/customers-redact", "/webhooks/customers-data-request"]);
+/** Le avisa a n8n una instalación (con los datos de contacto de la tienda) o una desinstalación. Sin ONBOARDING_URL, nada. */
+const avisarOnboarding = (env: Env, datos: Record<string, unknown>) => env.ONBOARDING_URL
+  ? fetch(env.ONBOARDING_URL, { method: "POST", body: JSON.stringify(datos), headers: { "Content-Type": "application/json", "x-gadsden-secret": env.ONBOARDING_SECRET ?? "" } }).then(() => {}, () => {})
+  : Promise.resolve();
+
+type Ctx = { waitUntil(p: Promise<unknown>): void };
+
+/** Lo que usaba una tienda que se va: tipo y lugar de cada widget, sin su contenido. `alta` es null si se instaló antes del 8-nov. */
+async function guardarBaja(env: Env, tienda: number) {
+  const [config, alta] = await Promise.all([env.TOKENS.get(`config:${tienda}`), env.TOKENS.get(`alta:${tienda}`)]);
+  const widgets = config === null ? null : ((JSON.parse(config) as { widgets?: { bloque?: { type?: string }; seccion?: { type?: string }; lugar?: string }[] }).widgets ?? [])
+    .map((w) => ({ tipo: (w.bloque ?? w.seccion)?.type ?? "?", lugar: w.lugar ?? "?" }));
+  const baja = new Date().toISOString();
+  await env.TOKENS.put(`baja:${tienda}:${baja}`, JSON.stringify({ tienda, alta, baja, widgets }), { expirationTtl: 365 * 86_400 });
+}
+
+const WEBHOOKS = new Set(["/webhooks/store-redact", "/webhooks/customers-redact", "/webhooks/customers-data-request", "/webhooks/productos"]);
 
 // Una ruta que empieza con "unstable:" va a esa versión de la API (los campos personalizados de imagen y la biblioteca de
 // medios sólo están ahí, 25-oct). Con `cuerpo`, un POST con JSON.
@@ -71,18 +92,65 @@ async function firmaValida(cuerpo: string, firma: string | null, secreto?: strin
   return dif === 0;
 }
 
-/** Los productos para un widget: con la caché de Cloudflare adelante (cinco minutos), para no gastar la API por visita. */
-async function productos(req: Request, env: Env, tienda: string, q: URLSearchParams) {
+/**
+ * Los webhooks de productos de la tienda, apuntando a /webhooks/productos: se registran al instalar y, en las tiendas que
+ * ya la tenían, en el primer /productos (marca `hooks:<tienda>`). No hay webhook de metacampos ni de campos
+ * personalizados del producto (doc, 29-oct): por eso la caché además vence a las seis horas.
+ */
+const EVENTOS = ["product/created", "product/updated", "product/deleted"];
+async function registrarWebhooks(env: Env, tienda: string, token: string, origen: string) {
+  const url = `${origen}/webhooks/productos`;
+  const r = await pedir(token, tienda, "/webhooks");
+  if (!r.ok) return;
+  const hay = new Set(((await r.json()) as { event: string; url: string }[]).filter((w) => w.url === url).map((w) => w.event));
+  const nuevos = await Promise.all(EVENTOS.filter((e) => !hay.has(e)).map((event) => pedir(token, tienda, "/webhooks", { event, url })));
+  if (nuevos.every((x) => x.ok)) await env.TOKENS.put(`hooks:${tienda}`, "1");
+}
+/** Un cambio de productos (webhook o guardar en el panel): una versión nueva deja atrás lo guardado de la tienda. */
+const vaciarProductos = (env: Env, tienda: string | number) => env.TOKENS.put(`ver:${tienda}`, Date.now().toString(36));
+
+const enCurso = new Map<string, Promise<{ texto: string; fallo: boolean } | null>>();
+/**
+ * Los productos para un widget. Cada ficha se lee de la API una vez y queda en KV (por tienda, versión y pedido) seis
+ * horas; adelante, la caché de Cloudflare cinco minutos. Los iframes de una misma página que piden lo mismo a la vez
+ * esperan un solo pedido. Si la API falló (429, 5xx o red), no se guarda.
+ */
+async function productos(req: Request, env: Env, ctx: Ctx, tienda: string, q: URLSearchParams) {
+  const ver = (await env.TOKENS.get(`ver:${tienda}`)) ?? "0";
+  const u = new URL(req.url);
+  u.searchParams.set("v", ver);
+  const llave = new Request(u.toString());
   const cache = (globalThis as unknown as { caches?: { default: { match(r: Request): Promise<Response | undefined>; put(r: Request, x: Response): Promise<void> } } }).caches?.default;
-  const guardada = await cache?.match(req);
+  const guardada = await cache?.match(llave);
   if (guardada) return guardada;
-  const token = await env.TOKENS.get(tienda);
-  if (!token) return Response.json({ productos: [], metacampos: {} }, { status: 404 });
-  const api: Api = (ruta) => pedir(token, tienda, ruta).then((x) => (x.ok ? x.json() : null)).catch(() => null);
-  const handles = (q.get("handles") ?? "").split(",").map((h) => h.trim()).filter(Boolean);
-  const ficha = Number(q.get("metacampos")) || undefined;
-  const r = Response.json(await leerProductos(api, handles, ficha), { headers: { "Cache-Control": "public, max-age=300", "Access-Control-Allow-Origin": "*" } });
-  await cache?.put(req, r.clone());
+  const clave = `cache:${tienda}:${ver}:${q.get("handles") ?? ""}:${q.get("metacampos") ?? ""}`;
+  // X-Gadsden: de dónde salió (kv, api, api-compartido o api-fallo), para medir que no se repitan pedidos.
+  let texto = await env.TOKENS.get(clave), fuente = "kv";
+  if (!texto) {
+    fuente = "api";
+    const token = await env.TOKENS.get(tienda);
+    if (!token) return Response.json({ productos: [], metacampos: {} }, { status: 404 });
+    if (!(await env.TOKENS.get(`hooks:${tienda}`))) ctx.waitUntil(registrarWebhooks(env, tienda, token, u.origin).catch(() => {}));
+    let pedido = enCurso.get(clave);
+    if (pedido) fuente = "api-compartido";
+    else {
+      let fallo = false;
+      const api: Api = (ruta) => pedir(token, tienda, ruta)
+        .then((x) => { if (x.status === 429 || x.status >= 500) fallo = true; return x.ok ? x.json() : null; })
+        .catch(() => { fallo = true; return null; });
+      const handles = (q.get("handles") ?? "").split(",").map((h) => h.trim()).filter(Boolean);
+      const ficha = Number(q.get("metacampos")) || undefined;
+      pedido = leerProductos(api, handles, ficha).then((x) => ({ texto: JSON.stringify(x), fallo })).finally(() => enCurso.delete(clave));
+      enCurso.set(clave, pedido);
+      pedido.then((x) => { if (x && !x.fallo) ctx.waitUntil(env.TOKENS.put(clave, x.texto, { expirationTtl: 6 * 3600 })); }, () => {});
+    }
+    const x = await pedido;
+    texto = x!.texto;
+    // Con la API fallando no se guarda en ningún lado: el próximo pedido vuelve a probar.
+    if (x!.fallo) return new Response(texto, { headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "Access-Control-Allow-Origin": "*", "X-Gadsden": "api-fallo" } });
+  }
+  const r = new Response(texto, { headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300", "Access-Control-Allow-Origin": "*", "X-Gadsden": fuente } });
+  ctx.waitUntil(cache?.put(llave, r.clone()) ?? Promise.resolve());
   return r;
 }
 
@@ -114,7 +182,8 @@ async function api(req: Request, env: Env, ruta: string, q: URLSearchParams): Pr
     if (texto.length > 500_000) return Response.json({ error: "grande" }, { status: 413 });
     const c = JSON.parse(texto || "null") as { widgets?: unknown } | null;
     if (!c || typeof c !== "object" || !Array.isArray(c.widgets)) return Response.json({ error: "formato" }, { status: 400 });
-    await env.TOKENS.put(`config:${tienda}`, texto);
+    // Guardar también trae de nuevo los productos: un metacampo cambiado se ve sin esperar las seis horas.
+    await Promise.all([env.TOKENS.put(`config:${tienda}`, texto), vaciarProductos(env, tienda)]);
     return Response.json({ ok: true, tienda });
   }
   if (ruta === "productos") {
@@ -169,7 +238,61 @@ async function api(req: Request, env: Env, ruta: string, q: URLSearchParams): Pr
 async function imagen(env: Env, tienda: string, id: string) {
   const { value, metadata } = await env.TOKENS.getWithMetadata<{ tipo: string }>(`img:${tienda}:${id}`, "arrayBuffer");
   if (!value) return new Response(null, { status: 404 });
-  return new Response(value, { headers: { "Content-Type": metadata?.tipo ?? "application/octet-stream", "Cache-Control": "public, max-age=31536000, immutable", "Access-Control-Allow-Origin": "*" } });
+  return new Response(value, { headers: { "Content-Type": metadata?.tipo ?? "application/octet-stream", "Cache-Control": "public, max-age=31536000, immutable", "Access-Control-Allow-Origin": "*", "X-Content-Type-Options": "nosniff" } });
+}
+
+/** Los primeros bytes de un PNG, un JPEG y un WebP ("RIFF....WEBP"): el tipo que dice el pedido tiene que coincidir. */
+function esImagen(datos: ArrayBuffer, tipo: string) {
+  const b = new Uint8Array(datos.slice(0, 12));
+  if (tipo === "image/png") return b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
+  if (tipo === "image/jpeg") return b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+  if (tipo === "image/webp") return String.fromCharCode(...b.slice(0, 4)) === "RIFF" && String.fromCharCode(...b.slice(8, 12)) === "WEBP";
+  return false;
+}
+/**
+ * La imagen que sube un comprador en el bloque "Personalizar con tu imagen" (src/w/snippets/gad-block-design_upload.liquid).
+ * Sin sesión (la sube cualquiera desde la tienda): sólo PNG, JPEG o WebP de verdad, hasta 20 MB (el bloque la vuelve a
+ * codificar y avisa desde 10 MB), en una tienda con la app instalada, y diez por minuto por IP y tienda (SUBIDAS).
+ * Queda 90 días: la app no lee pedidos y no sabe cuáles se compraron. Se sirve en /img/<tienda>/<id> como las del panel,
+ * y store-redact la borra con ellas.
+ */
+async function subidaDeComprador(req: Request, env: Env, tienda: string) {
+  const error = (texto: string, status: number) => Response.json({ error: texto }, { status });
+  if (req.method !== "POST") return error("método", 405);
+  if (env.SUBIDAS && !(await env.SUBIDAS.limit({ key: `${req.headers.get("cf-connecting-ip") ?? ""}:${tienda}` })).success) return error("Subiste muchas imágenes seguidas. Esperá un minuto y probá de nuevo.", 429);
+  if (!(await env.TOKENS.get(tienda))) return error("Tienda desconocida.", 404);
+  const tipo = (req.headers.get("Content-Type") ?? "").split(";")[0]!;
+  if (Number(req.headers.get("Content-Length") ?? 0) > 20 * 1024 * 1024) return error("La imagen pesa demasiado.", 413);
+  const datos = await req.arrayBuffer();
+  if (datos.byteLength > 20 * 1024 * 1024) return error("La imagen pesa demasiado.", 413);
+  if (!esImagen(datos, tipo)) return error("Usá una imagen JPG, PNG o WebP.", 415);
+  const id = crypto.randomUUID();
+  await env.TOKENS.put(`img:${tienda}:${id}`, datos, { metadata: { tipo, comprador: true }, expirationTtl: 90 * 86400 });
+  return Response.json({ url: `${new URL(req.url).origin}/img/${tienda}/${id}` });
+}
+
+const escapar = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+/**
+ * La vista previa de un diseño, la que llega al pedido como "Vista previa": la foto del producto con la imagen del
+ * comprador en su lugar (zona de impresión `z` y ubicación `p` del bloque, en proporciones), armada con CSS.
+ */
+function vistaDeDiseno(q: URLSearchParams, origen: string) {
+  const d = q.get("d") ?? "", f = q.get("f") ?? "";
+  const z = (q.get("z") ?? "").split(",").map(Number), p = (q.get("p") ?? "").split(",").map(Number);
+  if (!d.startsWith(`${origen}/img/`) || !/^https:\/\//.test(f) || z.length !== 4 || p.length !== 4 || [...z, ...p].some((n) => !Number.isFinite(n))) return pagina("Gadsden Widgets", "Esta vista previa está incompleta.", 400);
+  const [zx, zy, zw, zh] = z as [number, number, number, number], [x, y, w, r] = p as [number, number, number, number];
+  const pt = q.get("l") === "pt", X = Math.round(x * 100), Y = Math.round(y * 100), W = Math.round(w * 100);
+  return new Response(
+    `<!doctype html><html lang="${pt ? "pt" : "es"}"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${pt ? "Prévia do design" : "Vista previa del diseño"}</title>` +
+    `<style>body{margin:0;font:15px system-ui;background:#f4f4f4;color:#222}main{max-width:640px;margin:24px auto;padding:0 16px}` +
+    `.l{position:relative}.l>img{display:block;width:100%}.z{position:absolute;left:${zx}%;top:${zy}%;width:${zw}%;height:${zh}%;outline:1px dashed rgba(0,0,0,.35)}` +
+    `.d{position:absolute;left:${x * 100}%;top:${y * 100}%;width:${w * 100}%;transform:translate(-50%,-50%) rotate(${r}deg)}.d img{display:block;width:100%}a{color:inherit}</style>` +
+    `<main><div class="l"><img src="${escapar(f)}" alt="${pt ? "Produto" : "Producto"}"><div class="z"><div class="d"><img src="${escapar(d)}" alt="Design"></div></div></div>` +
+    (pt
+      ? `<p>Área de impressão: a linha tracejada. Centro da imagem a ${X} % da largura e a ${Y} % da altura da área; largura ${W} % da área; rotação ${r}°.</p><p><a href="${escapar(d)}" download>Baixar o arquivo original</a></p></main>`
+      : `<p>Zona de impresión: la línea punteada. Centro de la imagen al ${X} % del ancho y al ${Y} % del alto de la zona; ancho ${W} % de la zona; giro ${r}°.</p><p><a href="${escapar(d)}" download>Descargar el archivo original</a></p></main>`),
+    { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=3600", "Content-Security-Policy": "default-src 'none'; img-src https: 'self'; style-src 'unsafe-inline'" } },
+  );
 }
 
 /**
@@ -205,19 +328,28 @@ const pagina = (titulo: string, texto: string, status = 200) => new Response(
 );
 
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx: Ctx): Promise<Response> {
     const { pathname, searchParams } = new URL(req.url);
     if (WEBHOOKS.has(pathname)) {
       if (req.method !== "POST") return new Response(null, { status: 405 });
       const cuerpo = await req.text();
       if (!(await firmaValida(cuerpo, req.headers.get("x-linkedstore-hmac-sha256"), env.CLIENT_SECRET))) return new Response(null, { status: 401 });
-      if (pathname === "/webhooks/store-redact") {
-        const tienda = (JSON.parse(cuerpo || "{}") as { store_id?: number }).store_id;
-        if (tienda) {
-          await Promise.all([env.TOKENS.delete(String(tienda)), env.TOKENS.delete(`config:${tienda}`), env.TOKENS.delete(`dominio:${tienda}`)]);
-          // Las imágenes que subió desde el panel.
+      const tienda = (JSON.parse(cuerpo || "{}") as { store_id?: number }).store_id;
+      // Una tienda con stock que se mueve manda product/updated sin parar (6-nov: ~6 por minuto, 1.485 escrituras de KV
+      // en el día: se comió el cupo gratis de 1.000 de TODA la cuenta y tiró TicketUp). La versión se renueva como mucho
+      // cada 5 minutos: leer sale gratis, escribir no. Y si KV falla, 200 igual: un 500 hace que Tiendanube reintente.
+      if (pathname === "/webhooks/productos" && tienda) {
+        const ver = parseInt((await env.TOKENS.get(`ver:${tienda}`)) ?? "0", 36);
+        if (Date.now() - ver > 5 * 60_000) await vaciarProductos(env, tienda).catch(() => {});
+      }
+      if (pathname === "/webhooks/store-redact" && tienda) {
+        ctx.waitUntil(avisarOnboarding(env, { tienda, evento: "desinstalada" }));
+        await guardarBaja(env, tienda).catch(() => {});
+        await Promise.all([String(tienda), `alta:${tienda}`, `config:${tienda}`, `dominio:${tienda}`, `hooks:${tienda}`, `ver:${tienda}`].map((k) => env.TOKENS.delete(k)));
+        // Las imágenes que subió desde el panel y los productos guardados.
+        for (const prefix of [`img:${tienda}:`, `cache:${tienda}:`]) {
           for (let cursor: string | undefined, fin = false; !fin;) {
-            const l = await env.TOKENS.list({ prefix: `img:${tienda}:`, cursor });
+            const l = await env.TOKENS.list({ prefix, cursor });
             await Promise.all(l.keys.map((k) => env.TOKENS.delete(k.name)));
             [cursor, fin] = [l.cursor, l.list_complete];
           }
@@ -229,12 +361,15 @@ export default {
     if (deApi) return api(req, env, deApi[1]!, searchParams).catch(() => Response.json({ error: "interno" }, { status: 500 }));
     const deImagen = /^\/img\/(\d+)\/([0-9a-f-]{36})$/.exec(pathname);
     if (deImagen) return imagen(env, deImagen[1]!, deImagen[2]!);
+    const deSubida = /^\/subir\/(\d+)$/.exec(pathname);
+    if (deSubida) return subidaDeComprador(req, env, deSubida[1]!).catch(() => Response.json({ error: "No se pudo subir la imagen." }, { status: 500 }));
+    if (pathname === "/vista") return vistaDeDiseno(searchParams, new URL(req.url).origin);
     const deConfig = /^\/config\/(\d+)\.json$/.exec(pathname);
     if (deConfig) return config(req, env, deConfig[1]!);
     const deTienda = /^\/tienda\/(\d+)(\/[^]*)?$/.exec(pathname);
     if (deTienda && !deTienda[2]?.startsWith("//")) return tiendaEnEditor(req, env, deTienda[1]!, deTienda[2] ?? "/", new URL(req.url).search);
     const deProductos = /^\/productos\/(\d+)$/.exec(pathname);
-    if (deProductos) return productos(req, env, deProductos[1]!, searchParams);
+    if (deProductos) return productos(req, env, ctx, deProductos[1]!, searchParams);
     if (pathname !== "/callback") return env.ASSETS.fetch(req);
 
     const code = searchParams.get("code");
@@ -250,10 +385,15 @@ export default {
       console.log("canje fallido", r.status, datos.error ?? "", datos.error_description ?? "");
       return pagina("Gadsden Widgets", "No se pudo completar la instalación. Volvé a instalar la app desde Tiendanube.", 502);
     }
-    await env.TOKENS.put(String(datos.user_id), datos.access_token);
+    await Promise.all([env.TOKENS.put(String(datos.user_id), datos.access_token), env.TOKENS.put(`alta:${datos.user_id}`, new Date().toISOString())]);
+    // Siempre al instalar: al desinstalar Tiendanube borra los webhooks, pero la marca `hooks:` puede seguir.
+    ctx.waitUntil(registrarWebhooks(env, String(datos.user_id), datos.access_token, new URL(req.url).origin).catch(() => {}));
     // Instalada: al panel dentro del admin de la tienda, como TicketUp (la homologación pide que la app abra en el admin).
-    const r2 = await pedir(datos.access_token, datos.user_id!, "/store?fields=original_domain").catch(() => null);
-    const dominio = ((r2?.ok ? await r2.json() : {}) as { original_domain?: string }).original_domain;
+    // Con los mismos datos de la tienda, el aviso de instalación al onboarding (no frena la redirección).
+    const r2 = await pedir(datos.access_token, datos.user_id!, "/store?fields=name,email,phone,whatsapp_phone_number,country,main_language,original_domain").catch(() => null);
+    const deLaTienda = (r2?.ok ? await r2.json() : {}) as { original_domain?: string };
+    ctx.waitUntil(avisarOnboarding(env, { tienda: datos.user_id, evento: "instalada", ...deLaTienda }));
+    const dominio = deLaTienda.original_domain;
     if (dominio && /^[a-z0-9.-]+$/i.test(dominio)) {
       await env.TOKENS.put(`dominio:${datos.user_id}`, dominio);
       return Response.redirect(`https://${dominio}/admin/apps/${env.CLIENT_ID}`, 302);

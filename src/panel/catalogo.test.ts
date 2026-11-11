@@ -26,6 +26,10 @@ test("el catálogo del panel: las 54 secciones y los 26 bloques, con su schema y
   const textos = c.flatMap((x) => [...(x.esquema.settings ?? []), ...(x.esquema.blocks ?? []).flatMap((b) => b.settings ?? [])]).flatMap((a) => [a.label, a.info, a.content]);
   assert.deepEqual(textos.filter((t) => typeof t === "string" && /Shopify|Configuración del tema/.test(t)), []);
   assert.match(String(de("quantity_offers").esquema.settings?.[0]?.content), /Descuentos de tu tienda/);
+  // Popup promocional: en Tiendanube el email no se guarda, así que el formulario sale apagado y con su aviso.
+  const formulario = de("gad-promo-popup").esquema.settings?.find((a) => a.id === "email_form");
+  assert.equal(formulario?.default, false);
+  assert.match(String(formulario?.info), /no se guarda/);
 });
 
 test("el catálogo en portugués: cada texto que ve el comerciante tiene traducción y los valores de fábrica no se tocan", () => {

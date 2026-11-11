@@ -1,0 +1,265 @@
+{%- comment -%}
+  Bloque propio (no es de Gadsden): el comprador sube una imagen y la ubica dentro de la zona de impresión, sobre la foto
+  del producto. La imagen se sube al Worker (/subir/<tienda>, se guarda 90 días) y su link llega al pedido como una
+  propiedad, igual que el texto de un campo personalizado; con otra, "Vista previa", que arma /vista en el Worker.
+  Sacar el fondo, el aro para girar y agrandar y el aviso de "queda fuera" vienen de un editor propio de LGA, pasados
+  a una foto plana.
+{%- endcomment -%}
+{%- liquid
+  assign b = block.settings
+  assign prop = b.propiedad | default: 'Diseño'
+  if b.mockup != blank
+    assign fondo = b.mockup | image_url: width: 1200
+  else
+    assign foto = product.selected_or_first_available_variant.featured_image | default: product.featured_image
+    if foto != blank
+      assign fondo = foto | image_url: width: 1200
+    endif
+  endif
+-%}
+<div class="gad-pblock gad-p-diseno" data-gad-diseno data-zona="{{ b.zona_x }},{{ b.zona_y }},{{ b.zona_ancho }},{{ b.zona_alto }}" {{ block.shopify_attributes }}>
+  {%- if b.label != blank -%}<p class="gad-p-diseno__titulo">{{ b.label | escape }}</p>{%- endif -%}
+  <div class="gad-p-diseno__lienzo">
+    {%- if fondo != blank -%}<img class="gad-p-diseno__fondo" src="{{ fondo }}" alt="" draggable="false">{%- else -%}<div class="gad-p-diseno__fondo gad-p-diseno__fondo--vacio"></div>{%- endif -%}
+    <div class="gad-p-diseno__zona">
+      <div class="gad-p-diseno__marca" hidden>
+        <img alt="Tu imagen" draggable="false">
+        <button type="button" class="gad-p-diseno__manija gad-p-diseno__manija--girar" aria-label="Girar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" class="gad-p-diseno__manija gad-p-diseno__manija--tamano" aria-label="Agrandar o achicar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <label class="gad-p-diseno__vacio">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Subí tu imagen</span>
+        <input type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      </label>
+    </div>
+  </div>
+  <div class="gad-p-diseno__acciones" hidden>
+    <label class="gad-p-diseno__boton">Cambiar imagen<input type="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+    <button type="button" class="gad-p-diseno__boton" data-accion="fondo" aria-pressed="false" hidden>Sin fondo</button>
+    <button type="button" class="gad-p-diseno__boton" data-accion="quitar">Quitar</button>
+  </div>
+  <p class="gad-p-diseno__estado" role="status" aria-live="polite"></p>
+  {%- if b.help != blank -%}<p class="gad-p-field__help">{{ b.help }}</p>{%- endif -%}
+  <input type="hidden" name="properties[{{ prop | escape }}]" form="{{ product_form_id }}" data-campo="diseno">
+  <input type="hidden" name="properties[Vista previa]" form="{{ product_form_id }}" data-campo="vista">
+</div>
+<style>
+  .gad-p-diseno__titulo { margin: 0 0 .6rem; font-weight: 600; }
+  .gad-p-diseno__lienzo { position: relative; border-radius: 8px; overflow: hidden; background: rgba(var(--color-foreground), .04); user-select: none; }
+  .gad-p-diseno__fondo { display: block; width: 100%; height: auto; pointer-events: none; }
+  .gad-p-diseno__fondo--vacio { aspect-ratio: 1; }
+  .gad-p-diseno__zona { position: absolute; outline: 2px dashed rgba(var(--color-foreground), .45); outline-offset: -1px; }
+  .gad-p-diseno__vacio { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3rem; cursor: pointer; font-size: 1.3rem; text-align: center; color: rgb(var(--color-foreground)); background: rgba(var(--color-background), .55); }
+  .gad-p-diseno__vacio svg { width: 26px; height: 26px; }
+  .gad-p-diseno__marca { position: absolute; cursor: grab; touch-action: none; }
+  .gad-p-diseno__marca.arrastrando { cursor: grabbing; }
+  .gad-p-diseno__marca > img { display: block; width: 100%; height: 100%; pointer-events: none; outline: 1px solid rgba(var(--color-foreground), .35); }
+  .gad-p-diseno__manija { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; padding: 5px; border-radius: 50%; border: 0; background: rgb(var(--color-background)); color: rgb(var(--color-foreground)); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); cursor: pointer; touch-action: none; }
+  .gad-p-diseno__manija svg { display: block; width: 100%; height: 100%; }
+  .gad-p-diseno__manija--girar { left: 50%; top: -22px; }
+  .gad-p-diseno__manija--tamano { left: 100%; top: 100%; }
+  .gad-p-diseno__acciones { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+  .gad-p-diseno__acciones[hidden], .gad-p-diseno__marca[hidden], .gad-p-diseno__vacio[hidden], .gad-p-diseno__boton[hidden] { display: none; }
+  .gad-p-diseno__boton { padding: .6rem 1.2rem; border: 1px solid rgba(var(--color-foreground), .3); border-radius: 999px; background: none; color: rgb(var(--color-foreground)); font: inherit; font-size: 1.3rem; cursor: pointer; }
+  .gad-p-diseno__boton[aria-pressed="true"] { background: rgb(var(--color-foreground)); color: rgb(var(--color-background)); }
+  .gad-p-diseno__estado { margin: .6rem 0 0; font-size: 1.3rem; min-height: 1em; }
+  .gad-p-diseno__estado:empty { display: none; }
+  .gad-p-diseno__estado.error { color: #c0392b; }
+</style>
+<script>
+(() => {
+  const raiz = document.querySelector("[data-gad-diseno]:not([data-listo])");
+  if (!raiz) return;
+  raiz.dataset.listo = "1";
+  const cfg = (() => { try { return JSON.parse(decodeURIComponent(location.hash.slice(1))); } catch (e) { return {}; } })();
+  // En una tienda en portugués (cfg.idioma, de NubeSDK): los textos de acá y los que quedaron de fábrica en el panel.
+  const PT = cfg.idioma === "pt" ? {
+    "Personalizalo con tu imagen": "Personalize com sua imagem",
+    "JPG, PNG o WebP, hasta 10 MB. Movela, girala y agrandala dentro de la zona de impresión.": "JPG, PNG ou WebP, até 10 MB. Mova, gire e aumente dentro da área de impressão.",
+    "Subí tu imagen": "Envie sua imagem", "Cambiar imagen": "Trocar imagem", "Sin fondo": "Sem fundo", "Quitar": "Remover",
+    "Tu imagen": "Sua imagem", "Girar": "Girar", "Agrandar o achicar": "Aumentar ou diminuir",
+    "Una parte de tu imagen queda fuera de la zona de impresión.": "Uma parte da sua imagem fica fora da área de impressão.",
+    "Usá una imagen JPG, PNG o WebP.": "Use uma imagem JPG, PNG ou WebP.",
+    "La imagen pesa más de 10 MB. Probá con una más liviana.": "A imagem tem mais de 10 MB. Tente uma mais leve.",
+    "No pudimos abrir esa imagen.": "Não conseguimos abrir essa imagem.",
+    "Subiendo tu imagen…": "Enviando sua imagem…",
+    "No se pudo subir la imagen.": "Não foi possível enviar a imagem.",
+    "La imagen pesa demasiado.": "A imagem é pesada demais.",
+    "Subiste muchas imágenes seguidas. Esperá un minuto y probá de nuevo.": "Você enviou muitas imagens seguidas. Espere um minuto e tente de novo.",
+    "properties[Diseño]": "properties[Design]", "properties[Vista previa]": "properties[Prévia]",
+  } : {};
+  const t = (texto) => PT[texto] || texto;
+  if (cfg.idioma === "pt") {
+    const textos = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT);
+    for (let n; (n = textos.nextNode());) { const k = n.nodeValue.trim(); if (PT[k]) n.nodeValue = n.nodeValue.replace(k, PT[k]); }
+    for (const el of raiz.querySelectorAll("[aria-label], [alt], input[name]")) for (const a of ["aria-label", "alt", "name"]) { const v = el.getAttribute(a); if (v && PT[v]) el.setAttribute(a, PT[v]); }
+  }
+  const $ = (s) => raiz.querySelector(s);
+  const zona = $(".gad-p-diseno__zona"), marca = $(".gad-p-diseno__marca"), dibujo = marca.querySelector("img");
+  const vacio = $(".gad-p-diseno__vacio"), acciones = $(".gad-p-diseno__acciones"), estado = $(".gad-p-diseno__estado");
+  const botonFondo = $('[data-accion="fondo"]'), campo = $('[data-campo="diseno"]'), campoVista = $('[data-campo="vista"]');
+  const z = raiz.dataset.zona.split(",").map(Number);
+  Object.assign(zona.style, { left: z[0] + "%", top: z[1] + "%", width: z[2] + "%", height: z[3] + "%" });
+  const TIPOS = ["image/png", "image/jpeg", "image/webp"], MAXIMO = 10 * 1024 * 1024, LADO = 4000;
+  // El estado sobrevive a los redibujos (al cambiar de variante se vuelve a armar el HTML del bloque).
+  const s = window.__gadDiseno || (window.__gadDiseno = { pos: { x: 0.5, y: 0.5, w: 0.7, r: 0 }, urls: {} });
+
+  const avisar = (texto, error) => { estado.textContent = texto || ""; estado.classList.toggle("error", !!error); };
+  const lleno = () => zona.getBoundingClientRect();
+
+  // Como en el editor original: el color de las cuatro esquinas, y lo parecido que toca el borde se vuelve transparente.
+  function sacarFondo(ctx, w, h) {
+    const img = ctx.getImageData(0, 0, w, h), d = img.data;
+    let cr = 0, cg = 0, cb = 0;
+    for (const [x, y] of [[0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1]]) { const i = (y * w + x) * 4; cr += d[i]; cg += d[i + 1]; cb += d[i + 2]; }
+    cr /= 4; cg /= 4; cb /= 4;
+    const TOL = 62, visto = new Uint8Array(w * h), cola = [];
+    let borrados = 0;
+    const probar = (x, y) => {
+      if (x < 0 || y < 0 || x >= w || y >= h) return;
+      const p = y * w + x;
+      if (visto[p]) return;
+      visto[p] = 1;
+      const i = p * 4;
+      if (Math.hypot(d[i] - cr, d[i + 1] - cg, d[i + 2] - cb) < TOL) { if (d[i + 3] !== 0) borrados++; d[i + 3] = 0; cola.push(p); }
+    };
+    for (let x = 0; x < w; x++) { probar(x, 0); probar(x, h - 1); }
+    for (let y = 0; y < h; y++) { probar(0, y); probar(w - 1, y); }
+    while (cola.length) { const p = cola.pop(), x = p % w, y = (p / w) | 0; probar(x + 1, y); probar(x - 1, y); probar(x, y + 1); probar(x, y - 1); }
+    ctx.putImageData(img, 0, 0);
+    return borrados;
+  }
+  // La imagen en un lienzo de hasta `lado` px: al volver a codificarla se van los metadatos (la ubicación de una foto).
+  function lienzo(imagen, lado) {
+    const k = Math.min(1, lado / Math.max(imagen.naturalWidth, imagen.naturalHeight));
+    const c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(imagen.naturalWidth * k)); c.height = Math.max(1, Math.round(imagen.naturalHeight * k));
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(imagen, 0, 0, c.width, c.height);
+    return { c, ctx };
+  }
+  const blob = (c, tipo) => new Promise((r) => c.toBlob(r, tipo, 0.95));
+  async function subir(datos) {
+    const r = await fetch(new URL("../subir/" + cfg.tienda, location.href), { method: "POST", body: datos, headers: { "Content-Type": datos.type } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.url) throw new Error(t(j.error || "No se pudo subir la imagen."));
+    return j.url;
+  }
+
+  function ubicar() {
+    const t = lleno(), w = s.pos.w * t.width, h = w * s.aspecto;
+    Object.assign(marca.style, { width: w + "px", height: h + "px", left: s.pos.x * t.width - w / 2 + "px", top: s.pos.y * t.height - h / 2 + "px", transform: "rotate(" + s.pos.r + "deg)" });
+    // Como el aviso de "cae en un borde" del editor original: la caja girada, contra la zona de impresión.
+    const a = (s.pos.r * Math.PI) / 180, mx = Math.abs(w / 2 * Math.cos(a)) + Math.abs(h / 2 * Math.sin(a)), my = Math.abs(w / 2 * Math.sin(a)) + Math.abs(h / 2 * Math.cos(a));
+    const cx = s.pos.x * t.width, cy = s.pos.y * t.height, fuera = cx - mx < -2 || cy - my < -2 || cx + mx > t.width + 2 || cy + my > t.height + 2;
+    if (!s.subiendo && !s.error) avisar(fuera ? t("Una parte de tu imagen queda fuera de la zona de impresión.") : "");
+  }
+  function mostrar() {
+    const hay = !!s.vista;
+    marca.hidden = !hay; vacio.hidden = hay; acciones.hidden = !hay;
+    botonFondo.hidden = !s.hayFondo;
+    botonFondo.setAttribute("aria-pressed", String(!!s.sinFondo));
+    if (!hay) return;
+    dibujo.src = s.sinFondo ? s.vistaSinFondo : s.vista;
+    ubicar();
+  }
+  const r3 = (n) => Math.round(n * 1000) / 1000;
+  // Lo que llega al pedido: el link al archivo y el de la vista previa (/vista en el Worker, con la foto y la ubicación).
+  function guardar() {
+    const url = s.sinFondo ? s.urls.sinFondo : s.urls.original;
+    const foto = $(".gad-p-diseno__fondo");
+    campo.value = url || "";
+    campoVista.value = url ? new URL("../vista?" + new URLSearchParams({ d: url, f: (foto && foto.currentSrc) || "", z: z.join(","), p: [r3(s.pos.x), r3(s.pos.y), r3(s.pos.w), Math.round(s.pos.r)].join(","), ...(cfg.idioma === "pt" && { l: "pt" }) }), location.href).href : "";
+    campo.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  async function elegir(archivo) {
+    if (!archivo) return;
+    if (!TIPOS.includes(archivo.type)) return avisar(t("Usá una imagen JPG, PNG o WebP."), true);
+    if (archivo.size > MAXIMO) return avisar(t("La imagen pesa más de 10 MB. Probá con una más liviana."), true);
+    const imagen = new Image();
+    imagen.src = URL.createObjectURL(archivo);
+    try { await imagen.decode(); } catch (e) { return avisar(t("No pudimos abrir esa imagen."), true); }
+    const chica = lienzo(imagen, 800);
+    const conFondo = chica.c.toDataURL("image/png");
+    const borrados = sacarFondo(chica.ctx, chica.c.width, chica.c.height);
+    const t = lleno(), aspecto = imagen.naturalHeight / imagen.naturalWidth;
+    Object.assign(s, {
+      imagen, aspecto, vista: conFondo, vistaSinFondo: chica.c.toDataURL("image/png"), hayFondo: borrados / (chica.c.width * chica.c.height) >= 0.02,
+      sinFondo: false, urls: {}, error: false,
+      // Entra entera en la zona, al 80 %.
+      pos: { x: 0.5, y: 0.5, w: Math.min(0.8, (0.8 * t.height) / (t.width * aspecto) || 0.8), r: 0 },
+    });
+    guardar();
+    mostrar();
+    await subirVersion(false);
+  }
+  async function subirVersion(sinFondo) {
+    const clave = sinFondo ? "sinFondo" : "original";
+    if (s.urls[clave]) return guardar();
+    const yo = (s.turno = (s.turno || 0) + 1);
+    s.subiendo = true; s.error = false;
+    avisar(t("Subiendo tu imagen…"));
+    try {
+      const { c, ctx } = lienzo(s.imagen, sinFondo ? 2500 : LADO);
+      if (sinFondo) sacarFondo(ctx, c.width, c.height);
+      // Con transparencia, PNG; una foto sin transparencia, JPEG (pesa mucho menos).
+      const tipo = sinFondo || /png|webp/.test(s.tipo || "") ? "image/png" : "image/jpeg";
+      const datos = await blob(c, tipo);
+      const url = await subir(datos);
+      s.urls[clave] = url;
+      if (yo !== s.turno) return;
+      s.subiendo = false;
+      avisar("");
+      guardar();
+      ubicar();
+    } catch (e) {
+      if (yo !== s.turno) return;
+      s.subiendo = false; s.error = true;
+      avisar(e.message || t("No se pudo subir la imagen."), true);
+    }
+  }
+
+  for (const entrada of raiz.querySelectorAll('input[type="file"]')) entrada.addEventListener("change", () => { const a = entrada.files[0]; if (a) s.tipo = a.type; void elegir(a); entrada.value = ""; });
+  botonFondo.addEventListener("click", () => { s.sinFondo = !s.sinFondo; mostrar(); guardar(); void subirVersion(s.sinFondo); });
+  $('[data-accion="quitar"]').addEventListener("click", () => { Object.assign(s, { vista: null, imagen: null, urls: {}, sinFondo: false, hayFondo: false, error: false, subiendo: false, turno: (s.turno || 0) + 1 }); avisar(""); guardar(); mostrar(); });
+
+  // Mover (arrastrando la imagen), girar y cambiar el tamaño (las manijas), como el aro del editor original.
+  let gesto = null;
+  const centro = () => { const t = lleno(); return { x: t.left + s.pos.x * t.width, y: t.top + s.pos.y * t.height }; };
+  function empezar(tipo, ev) {
+    ev.preventDefault(); ev.stopPropagation();
+    const c = centro(), t = lleno();
+    gesto = { tipo, x: ev.clientX, y: ev.clientY, pos: { ...s.pos }, t, angulo: Math.atan2(ev.clientY - c.y, ev.clientX - c.x), dist: Math.hypot(ev.clientX - c.x, ev.clientY - c.y) };
+    try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) { /* */ }
+    marca.classList.add("arrastrando");
+  }
+  function mover(ev) {
+    if (!gesto) return;
+    const c = centro();
+    if (gesto.tipo === "mover") {
+      s.pos.x = Math.min(1, Math.max(0, gesto.pos.x + (ev.clientX - gesto.x) / gesto.t.width));
+      s.pos.y = Math.min(1, Math.max(0, gesto.pos.y + (ev.clientY - gesto.y) / gesto.t.height));
+    } else if (gesto.tipo === "girar") {
+      s.pos.r = Math.round(gesto.pos.r + ((Math.atan2(ev.clientY - c.y, ev.clientX - c.x) - gesto.angulo) * 180) / Math.PI);
+    } else {
+      s.pos.w = Math.min(1.5, Math.max(0.08, gesto.pos.w * (Math.hypot(ev.clientX - c.x, ev.clientY - c.y) / Math.max(1, gesto.dist))));
+    }
+    ubicar();
+  }
+  function terminar() { if (!gesto) return; gesto = null; marca.classList.remove("arrastrando"); guardar(); }
+  for (const [el, tipo] of [[marca, "mover"], [$(".gad-p-diseno__manija--girar"), "girar"], [$(".gad-p-diseno__manija--tamano"), "tamano"]]) {
+    el.addEventListener("pointerdown", (ev) => { if (tipo === "mover" && ev.target.closest(".gad-p-diseno__manija")) return; empezar(tipo, ev); });
+    el.addEventListener("pointermove", mover);
+    el.addEventListener("pointerup", terminar);
+    el.addEventListener("pointercancel", terminar);
+  }
+  const foto = $("img.gad-p-diseno__fondo");
+  if (foto && !foto.complete) foto.addEventListener("load", () => { if (s.vista) ubicar(); guardar(); }, { once: true });
+  new ResizeObserver(() => { if (s.vista) ubicar(); }).observe(zona);
+  mostrar();
+  // Con la variante nueva cambia la foto: la vista previa del pedido tiene que llevar la nueva.
+  if (s.vista) guardar();
+})();
+</script>

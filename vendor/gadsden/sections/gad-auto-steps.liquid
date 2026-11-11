@@ -143,14 +143,17 @@
     <div class="ct-pasos__pista" aria-live="polite">
       {%- for b in section.blocks -%}
         {%- liquid
+          assign img = blank
           if b.settings.image != blank
             assign img = b.settings.image | image_url: width: 240
-          else
-            assign img = 'ct-paso-' | append: forloop.index | append: '.jpg' | asset_url
           endif
         -%}
         <article class="ct-pasos__card" id="ct-card-{{ section.id }}-{{ forloop.index0 }}" role="tabpanel" {{ b.shopify_attributes }}>
-          <img class="ct-pasos__img" src="{{ img }}" alt="" width="{{ s.image_size }}" height="{{ s.image_size }}" loading="lazy">
+          {%- if img != blank -%}
+            <img class="ct-pasos__img" src="{{ img }}" alt="" width="{{ s.image_size }}" height="{{ s.image_size }}" loading="lazy">
+          {%- else -%}
+            {{ 'image' | placeholder_svg_tag: 'ct-pasos__img placeholder-svg' }}
+          {%- endif -%}
           <div>
             <div class="ct-pasos__fila">
               <h3>{{ b.settings.title }}</h3>
@@ -293,7 +296,7 @@
       "type": "paso",
       "name": "Paso",
       "settings": [
-        { "type": "image_picker", "id": "image", "label": "Imagen", "info": "Vacío = assets/ct-paso-N.jpg" },
+        { "type": "image_picker", "id": "image", "label": "Imagen", "info": "Vacío = placeholder" },
         { "type": "text", "id": "title", "label": "Título", "default": "Título del paso" },
         { "type": "text", "id": "tag", "label": "Chip del tiempo" },
         { "type": "text", "id": "text", "label": "Una frase" }

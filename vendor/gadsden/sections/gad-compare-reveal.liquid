@@ -3,13 +3,9 @@
   assign s = section.settings
   if s.before_image != blank
     assign antes = s.before_image | image_url: width: 900
-  else
-    assign antes = 'ct-comparar-antes.jpg' | asset_url
   endif
   if s.after_image != blank
     assign despues = s.after_image | image_url: width: 900
-  else
-    assign despues = 'ct-comparar-despues.jpg' | asset_url
   endif
 -%}
 
@@ -63,9 +59,17 @@
   {%- if s.heading != blank -%}<h2 class="ct-cmp__titulo {{ s.heading_size }}">{{ s.heading }}</h2>{%- endif -%}
   <div class="ct-cmp__marco" data-marco role="slider" tabindex="0" aria-label="Comparar antes y después"
     aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
-    <img class="ct-cmp__img ct-cmp__despues" src="{{ despues }}" alt="{{ s.after_label | escape }}" draggable="false" loading="lazy">
+    {%- if despues != blank -%}
+      <img class="ct-cmp__img ct-cmp__despues" src="{{ despues }}" alt="{{ s.after_label | escape }}" width="{{ s.after_image.width }}" height="{{ s.after_image.height }}" draggable="false" loading="lazy">
+    {%- else -%}
+      {{ 'lifestyle-2' | placeholder_svg_tag: 'ct-cmp__img ct-cmp__despues placeholder-svg' }}
+    {%- endif -%}
     <div class="ct-cmp__antes" data-antes>
-      <img class="ct-cmp__img" src="{{ antes }}" alt="{{ s.before_label | escape }}" draggable="false" loading="lazy">
+      {%- if antes != blank -%}
+        <img class="ct-cmp__img" src="{{ antes }}" alt="{{ s.before_label | escape }}" width="{{ s.before_image.width }}" height="{{ s.before_image.height }}" draggable="false" loading="lazy">
+      {%- else -%}
+        {{ 'lifestyle-1' | placeholder_svg_tag: 'ct-cmp__img placeholder-svg' }}
+      {%- endif -%}
     </div>
     {%- if s.labels -%}
       <span class="ct-cmp__etq ct-cmp__etq--antes" data-etq-antes>{{ s.before_label }}</span>
@@ -195,8 +199,8 @@
       "type": "select", "id": "heading_size", "label": "Tamaño del titular", "default": "h2",
       "options": [{ "value": "h2", "label": "Chico" }, { "value": "h1", "label": "Mediano" }]
     },
-    { "type": "image_picker", "id": "before_image", "label": "Foto antes", "info": "Vacío = assets/ct-comparar-antes.jpg (placeholder)" },
-    { "type": "image_picker", "id": "after_image", "label": "Foto después", "info": "Vacío = assets/ct-comparar-despues.jpg (placeholder)" },
+    { "type": "image_picker", "id": "before_image", "label": "Foto antes", "info": "Vacío = placeholder" },
+    { "type": "image_picker", "id": "after_image", "label": "Foto después", "info": "Vacío = placeholder" },
     { "type": "checkbox", "id": "labels", "label": "Mostrar etiquetas", "default": true },
     { "type": "text", "id": "before_label", "label": "Etiqueta antes", "default": "Antes" },
     { "type": "text", "id": "after_label", "label": "Etiqueta después", "default": "Después" },

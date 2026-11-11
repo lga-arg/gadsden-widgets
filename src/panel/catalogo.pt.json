@@ -1474,5 +1474,15 @@
  "Estilos propios (CSS)": "Estilos próprios (CSS)",
  "Opcional, para ajustes finos.": "Opcional, para ajustes finos.",
  "Texto de urgencia": "Texto de urgência",
- "El texto y el borde toman el color de los botones de la combinación.": "O texto e a borda usam a cor dos botões da combinação."
+ "El texto y el borde toman el color de los botones de la combinación.": "O texto e a borda usam a cor dos botões da combinação.",
+ "Personalizar con tu imagen": "Personalizar com a sua imagem",
+ "Texto de ayuda": "Texto de ajuda",
+ "Vacía: se usa la foto del producto (la de la variante elegida).": "Vazia: usa a foto do produto (a da variação escolhida).",
+ "Zona de impresión: distancia desde la izquierda": "Área de impressão: distância da esquerda",
+ "Zona de impresión: distancia desde arriba": "Área de impressão: distância do topo",
+ "Zona de impresión: ancho": "Área de impressão: largura",
+ "Zona de impresión: alto": "Área de impressão: altura",
+ "Nombre con el que llega en el pedido": "Nome com que chega no pedido",
+ "En el pedido llegan el link al archivo original y otro a la vista previa.": "No pedido chegam o link do arquivo original e outro da pré-visualização.",
+ "En Tiendanube el email no se guarda: al enviarlo, el comprador ve directo el cupón. Para juntar contactos, usá otra herramienta.": "Na Nuvemshop o e-mail não é salvo: ao enviá-lo, o comprador vê o cupom na hora. Para juntar contatos, use outra ferramenta."
 }
