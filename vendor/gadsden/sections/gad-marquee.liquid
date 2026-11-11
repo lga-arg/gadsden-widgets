@@ -1,18 +1,18 @@
 
 {%- assign uid = section.id | replace: '_', '-' -%}
 <style>
-  #gps-marq-{{ uid }}{background:#fff;overflow:hidden;white-space:nowrap;padding:26px 0 4px;font-family:'Poppins',system-ui,sans-serif}
-  #gps-marq-{{ uid }} .gm-trk{display:inline-flex;animation:gm-{{ uid }} {{ section.settings.speed | default: 34 }}s linear infinite}
-  #gps-marq-{{ uid }} .gm-trk span{font-size:96px;font-weight:800;letter-spacing:-.02em;text-transform:uppercase;padding:0 30px;color:transparent;-webkit-text-stroke:2px #d3e0d6}
-  #gps-marq-{{ uid }} .gm-trk span.fill{color:#eef4ef;-webkit-text-stroke:0}
+  #gad-marq-{{ uid }}{background:#fff;overflow:hidden;white-space:nowrap;padding:26px 0 4px;font-family:'Poppins',system-ui,sans-serif}
+  #gad-marq-{{ uid }} .gm-trk{display:inline-flex;animation:gm-{{ uid }} {{ section.settings.speed | default: 34 }}s linear infinite}
+  #gad-marq-{{ uid }} .gm-trk span{font-size:96px;font-weight:800;letter-spacing:-.02em;text-transform:uppercase;padding:0 30px;color:transparent;-webkit-text-stroke:2px #d3e0d6}
+  #gad-marq-{{ uid }} .gm-trk span.fill{color:#eef4ef;-webkit-text-stroke:0}
   @keyframes gm-{{ uid }}{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-  @media(prefers-reduced-motion:reduce){#gps-marq-{{ uid }} .gm-trk{animation:none}}
-  @media(max-width:900px){#gps-marq-{{ uid }} .gm-trk span{font-size:54px;-webkit-text-stroke:1.5px #d3e0d6}}
+  @media(prefers-reduced-motion:reduce){#gad-marq-{{ uid }} .gm-trk{animation:none}}
+  @media(max-width:900px){#gad-marq-{{ uid }} .gm-trk span{font-size:54px;-webkit-text-stroke:1.5px #d3e0d6}}
 </style>
-<div id="gps-marq-{{ uid }}" aria-hidden="true">
+<div id="gad-marq-{{ uid }}" aria-hidden="true">
   <div class="gm-trk">
     {%- for i in (1..4) -%}
-      <span>{{ section.settings.text_outline | default: 'Sabé dónde está' }}</span><span class="fill">{{ section.settings.text_fill | default: 'DOMU' }}</span>
+      <span>{{ section.settings.text_outline | default: 'Tu frase' }}</span><span class="fill">{{ section.settings.text_fill | default: 'Tu marca' }}</span>
     {%- endfor -%}
   </div>
 </div>
@@ -20,10 +20,10 @@
 {
   "name": "Marquesina",
   "tag": "section",
-  "class": "gps-marquee-section",
+  "class": "gad-marquee-section",
   "settings": [
-    { "type": "text", "id": "text_outline", "label": "Palabra en contorno", "default": "Sabé dónde está" },
-    { "type": "text", "id": "text_fill", "label": "Palabra rellena", "default": "DOMU" },
+    { "type": "text", "id": "text_outline", "label": "Palabra en contorno", "default": "Tu frase" },
+    { "type": "text", "id": "text_fill", "label": "Palabra rellena", "default": "Tu marca" },
     { "type": "range", "id": "speed", "label": "Velocidad (seg)", "min": 12, "max": 60, "step": 2, "unit": "s", "default": 34 }
   ],
   "presets": [ { "name": "Marquesina" } ]

@@ -117,7 +117,7 @@
         {{ s.image | image_url: width: 900 | image_tag: loading: 'lazy', widths: '400, 600, 900', sizes: '(min-width: 750px) 420px, 78vw', alt: s.image.alt }}
       {%- else -%}
         <img src="{{ 'ct-cierre-producto.webp' | asset_url }}" width="804" height="821" loading="lazy"
-             alt="Caja de CarboTiras con los sobres y las tiras superior e inferior">
+             alt="Imagen del producto">
       {%- endif -%}
     </div>
 
@@ -193,7 +193,7 @@
     { "type": "text", "id": "item_1", "label": "Ítem 1 (envío)", "default": "Envío gratis" },
     { "type": "text", "id": "item_2", "label": "Ítem 2 (pago)", "default": "3 cuotas sin interés" },
     { "type": "text", "id": "item_3", "label": "Ítem 3 (garantía)", "default": "7 días de garantía" },
-    { "type": "text", "id": "button_label", "label": "Botón (baja a la oferta)", "default": "Quiero mis CarboTiras" },
+    { "type": "text", "id": "button_label", "label": "Botón (baja a la oferta)", "default": "Quiero el mío" },
     { "type": "header", "content": "Colores y espacios" },
     { "type": "color", "id": "background", "label": "Fondo", "default": "#F5F7FA" },
     { "type": "color", "id": "text_color", "label": "Texto", "default": "#0B0B0B" },

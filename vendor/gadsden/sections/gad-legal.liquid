@@ -3,10 +3,10 @@
 {%- liquid
   assign uid = section.id | replace: '_', '-'
   assign pend = '[PENDIENTE]'
-  assign inci = product.metafields.athlex.inci | default: pend
-  assign titular = product.metafields.athlex.titular | default: pend
-  assign legajo = product.metafields.athlex.anmat_legajo | default: pend
-  assign neto = product.metafields.athlex.contenido_neto | default: section.settings.neto
+  assign inci = product.metafields.custom.inci | default: pend
+  assign titular = product.metafields.custom.titular | default: pend
+  assign legajo = product.metafields.custom.anmat_legajo | default: pend
+  assign neto = product.metafields.custom.contenido_neto | default: section.settings.neto
 -%}
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap">
@@ -103,7 +103,7 @@
 {
   "name": "Aviso y datos legales",
   "tag": "section",
-  "class": "athlex-legal-section",
+  "class": "gad-legal-section",
   "settings": [
     { "type": "textarea", "id": "aviso", "label": "Aviso destacado (siempre visible)", "default": "Uso externo. Suspender su uso en caso de irritación. Mantener fuera del alcance de los niños." },
     { "type": "text", "id": "titulo_detalle", "label": "Título del desplegable", "default": "Advertencias, ingredientes y datos del producto" },

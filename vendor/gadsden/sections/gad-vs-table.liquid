@@ -1,38 +1,38 @@
 
 {%- assign uid = section.id | replace: '_', '-' -%}
 <style>
-  #gps-cmp-{{ uid }}{background:#fff;padding:80px 20px;font-family:'Poppins',system-ui,sans-serif}
-  #gps-cmp-{{ uid }} .gc-wrap{max-width:1180px;margin:0 auto;text-align:center}
-  #gps-cmp-{{ uid }} .gc-eye{font-weight:700;font-size:13.5px;letter-spacing:.22em;text-transform:uppercase;color:#2E7D32}
-  #gps-cmp-{{ uid }} h2{font-size:42px;font-weight:800;letter-spacing:-.02em;color:#0B1F3A;margin:12px 0 0}
-  #gps-cmp-{{ uid }} .gc-t{margin:44px auto 0;border:1px solid #e5eaf1;border-radius:22px;overflow:hidden;max-width:860px;box-shadow:0 20px 44px rgba(11,31,58,.06);text-align:left;background:#fff}
-  #gps-cmp-{{ uid }} .gc-row{display:grid;grid-template-columns:1.7fr 1fr 1fr;align-items:center}
-  #gps-cmp-{{ uid }} .gc-head{background:#0B1F3A;color:#fff}
-  #gps-cmp-{{ uid }} .gc-head div{padding:19px 24px;font-weight:600}
-  #gps-cmp-{{ uid }} .gc-head .u{background:#2E7D32;text-align:center;font-weight:800}
-  #gps-cmp-{{ uid }} .gc-head .o{text-align:center;color:#b9c6cf;font-weight:500}
-  #gps-cmp-{{ uid }} .gc-body .gc-row{border-top:1px solid #e5eaf1}
-  #gps-cmp-{{ uid }} .gc-body .gc-row:nth-child(even){background:#F5F7FA}
-  #gps-cmp-{{ uid }} .gc-f{padding:16px 24px;font-weight:500;font-size:16px;color:#0B1F3A}
-  #gps-cmp-{{ uid }} .gc-c{padding:16px 24px;display:flex;justify-content:center}
-  #gps-cmp-{{ uid }} .gc-c.u{background:#e9f5ea}
-  #gps-cmp-{{ uid }} .ok{width:26px;height:26px;border-radius:50%;background:#2E7D32;color:#fff;display:grid;place-items:center}
-  #gps-cmp-{{ uid }} .ok.grey{background:#8aa2b1}
-  #gps-cmp-{{ uid }} .no{width:26px;height:26px;border-radius:50%;background:#e9eef2;color:#adb8c0;display:grid;place-items:center}
+  #gad-cmp-{{ uid }}{background:#fff;padding:80px 20px;font-family:'Poppins',system-ui,sans-serif}
+  #gad-cmp-{{ uid }} .gc-wrap{max-width:1180px;margin:0 auto;text-align:center}
+  #gad-cmp-{{ uid }} .gc-eye{font-weight:700;font-size:13.5px;letter-spacing:.22em;text-transform:uppercase;color:#2E7D32}
+  #gad-cmp-{{ uid }} h2{font-size:42px;font-weight:800;letter-spacing:-.02em;color:#0B1F3A;margin:12px 0 0}
+  #gad-cmp-{{ uid }} .gc-t{margin:44px auto 0;border:1px solid #e5eaf1;border-radius:22px;overflow:hidden;max-width:860px;box-shadow:0 20px 44px rgba(11,31,58,.06);text-align:left;background:#fff}
+  #gad-cmp-{{ uid }} .gc-row{display:grid;grid-template-columns:1.7fr 1fr 1fr;align-items:center}
+  #gad-cmp-{{ uid }} .gc-head{background:#0B1F3A;color:#fff}
+  #gad-cmp-{{ uid }} .gc-head div{padding:19px 24px;font-weight:600}
+  #gad-cmp-{{ uid }} .gc-head .u{background:#2E7D32;text-align:center;font-weight:800}
+  #gad-cmp-{{ uid }} .gc-head .o{text-align:center;color:#b9c6cf;font-weight:500}
+  #gad-cmp-{{ uid }} .gc-body .gc-row{border-top:1px solid #e5eaf1}
+  #gad-cmp-{{ uid }} .gc-body .gc-row:nth-child(even){background:#F5F7FA}
+  #gad-cmp-{{ uid }} .gc-f{padding:16px 24px;font-weight:500;font-size:16px;color:#0B1F3A}
+  #gad-cmp-{{ uid }} .gc-c{padding:16px 24px;display:flex;justify-content:center}
+  #gad-cmp-{{ uid }} .gc-c.u{background:#e9f5ea}
+  #gad-cmp-{{ uid }} .ok{width:26px;height:26px;border-radius:50%;background:#2E7D32;color:#fff;display:grid;place-items:center}
+  #gad-cmp-{{ uid }} .ok.grey{background:#8aa2b1}
+  #gad-cmp-{{ uid }} .no{width:26px;height:26px;border-radius:50%;background:#e9eef2;color:#adb8c0;display:grid;place-items:center}
   @media(max-width:760px){
-    #gps-cmp-{{ uid }}{padding:56px 14px}#gps-cmp-{{ uid }} h2{font-size:28px}
-    #gps-cmp-{{ uid }} .gc-row{grid-template-columns:1.5fr .9fr .9fr}
-    #gps-cmp-{{ uid }} .gc-f{font-size:14px;padding:14px 12px}#gps-cmp-{{ uid }} .gc-head div{padding:14px;font-size:14px}
+    #gad-cmp-{{ uid }}{padding:56px 14px}#gad-cmp-{{ uid }} h2{font-size:28px}
+    #gad-cmp-{{ uid }} .gc-row{grid-template-columns:1.5fr .9fr .9fr}
+    #gad-cmp-{{ uid }} .gc-f{font-size:14px;padding:14px 12px}#gad-cmp-{{ uid }} .gc-head div{padding:14px;font-size:14px}
   }
 </style>
 {%- capture svg_ok -%}<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>{%- endcapture -%}
 {%- capture svg_no -%}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 6l12 12M18 6 6 18"/></svg>{%- endcapture -%}
-<div id="gps-cmp-{{ uid }}">
+<div id="gad-cmp-{{ uid }}">
   <div class="gc-wrap">
     {%- if section.settings.eyebrow != blank -%}<span class="gc-eye">{{ section.settings.eyebrow }}</span>{%- endif -%}
     {%- if section.settings.heading != blank -%}<h2>{{ section.settings.heading }}</h2>{%- endif -%}
     <div class="gc-t">
-      <div class="gc-row gc-head"><div>{{ section.settings.col_feature | default: 'Característica' }}</div><div class="u">{{ section.settings.col_us | default: 'GF-07 DOMU' }}</div><div class="o">{{ section.settings.col_other | default: 'Otros' }}</div></div>
+      <div class="gc-row gc-head"><div>{{ section.settings.col_feature | default: 'Característica' }}</div><div class="u">{{ section.settings.col_us | default: 'Nosotros' }}</div><div class="o">{{ section.settings.col_other | default: 'Otros' }}</div></div>
       <div class="gc-body">
         {%- for block in section.blocks -%}
           <div class="gc-row" {{ block.shopify_attributes }}>
@@ -49,12 +49,12 @@
 {
   "name": "Tabla versus",
   "tag": "section",
-  "class": "gps-cmp-section",
+  "class": "gad-vs-table-section",
   "settings": [
-    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "03 — Por qué el GF-07" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "03 — Por qué elegirnos" },
     { "type": "text", "id": "heading", "label": "Título", "default": "Mejor que un rastreador común" },
     { "type": "text", "id": "col_feature", "label": "Columna 1 (encabezado)", "default": "Característica" },
-    { "type": "text", "id": "col_us", "label": "Columna propia", "default": "GF-07 DOMU" },
+    { "type": "text", "id": "col_us", "label": "Columna propia", "default": "Nosotros" },
     { "type": "text", "id": "col_other", "label": "Columna otros", "default": "Otros" }
   ],
   "blocks": [

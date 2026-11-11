@@ -1,18 +1,18 @@
 
 {%- assign uid = section.id | replace: '_', '-' -%}
 <style>
-  #gps-cta-{{ uid }}{background:#fff;padding:70px 20px;font-family:'Poppins',system-ui,sans-serif}
-  #gps-cta-{{ uid }} .gt-card{max-width:1180px;margin:0 auto;background:#0B1F3A;color:#fff;border-radius:32px;padding:66px 40px;text-align:center;position:relative;overflow:hidden}
-  #gps-cta-{{ uid }} .gt-card:before{content:"";position:absolute;inset:0;background:radial-gradient(600px 320px at 82% 120%,rgba(46,125,50,.5),transparent 62%)}
-  #gps-cta-{{ uid }} .gt-card>*{position:relative;z-index:1}
-  #gps-cta-{{ uid }} h2{font-size:46px;font-weight:800;letter-spacing:-.02em;margin:0;color:#fff}
-  #gps-cta-{{ uid }} .gt-pill{display:inline-block;border:1.5px solid rgba(255,255,255,.55);color:#fff;border-radius:100px;padding:14px 32px;font-weight:700;font-size:21px;margin:26px 0 18px}
-  #gps-cta-{{ uid }} .gt-sub{color:#c9e0cf;font-size:17px;margin:0 0 28px}
-  #gps-cta-{{ uid }} .gt-btn{display:inline-flex;align-items:center;justify-content:center;background:#fff;color:#2E7D32;font-weight:800;font-size:18px;border-radius:14px;padding:19px 46px;text-decoration:none;transition:.2s;min-width:300px}
-  #gps-cta-{{ uid }} .gt-btn:hover{background:#e9f5ea;transform:translateY(-2px);box-shadow:0 14px 28px rgba(0,0,0,.22)}
-  @media(max-width:760px){#gps-cta-{{ uid }} .gt-card{padding:52px 24px;border-radius:24px}#gps-cta-{{ uid }} h2{font-size:30px}#gps-cta-{{ uid }} .gt-btn{width:100%;min-width:0}}
+  #gad-cta-{{ uid }}{background:#fff;padding:70px 20px;font-family:'Poppins',system-ui,sans-serif}
+  #gad-cta-{{ uid }} .gt-card{max-width:1180px;margin:0 auto;background:#0B1F3A;color:#fff;border-radius:32px;padding:66px 40px;text-align:center;position:relative;overflow:hidden}
+  #gad-cta-{{ uid }} .gt-card:before{content:"";position:absolute;inset:0;background:radial-gradient(600px 320px at 82% 120%,rgba(46,125,50,.5),transparent 62%)}
+  #gad-cta-{{ uid }} .gt-card>*{position:relative;z-index:1}
+  #gad-cta-{{ uid }} h2{font-size:46px;font-weight:800;letter-spacing:-.02em;margin:0;color:#fff}
+  #gad-cta-{{ uid }} .gt-pill{display:inline-block;border:1.5px solid rgba(255,255,255,.55);color:#fff;border-radius:100px;padding:14px 32px;font-weight:700;font-size:21px;margin:26px 0 18px}
+  #gad-cta-{{ uid }} .gt-sub{color:#c9e0cf;font-size:17px;margin:0 0 28px}
+  #gad-cta-{{ uid }} .gt-btn{display:inline-flex;align-items:center;justify-content:center;background:#fff;color:#2E7D32;font-weight:800;font-size:18px;border-radius:14px;padding:19px 46px;text-decoration:none;transition:.2s;min-width:300px}
+  #gad-cta-{{ uid }} .gt-btn:hover{background:#e9f5ea;transform:translateY(-2px);box-shadow:0 14px 28px rgba(0,0,0,.22)}
+  @media(max-width:760px){#gad-cta-{{ uid }} .gt-card{padding:52px 24px;border-radius:24px}#gad-cta-{{ uid }} h2{font-size:30px}#gad-cta-{{ uid }} .gt-btn{width:100%;min-width:0}}
 </style>
-<div id="gps-cta-{{ uid }}">
+<div id="gad-cta-{{ uid }}">
   <div class="gt-card">
     {%- if section.settings.heading != blank -%}<h2>{{ section.settings.heading }}</h2>{%- endif -%}
     {%- if section.settings.pill != blank -%}<div class="gt-pill">{{ section.settings.pill }}</div>{%- endif -%}
@@ -24,7 +24,7 @@
 {
   "name": "Llamado final",
   "tag": "section",
-  "class": "gps-cta-section",
+  "class": "gad-cta-final-section",
   "settings": [
     { "type": "text", "id": "heading", "label": "Título", "default": "¿Listo para dejar de perder cosas?" },
     { "type": "text", "id": "pill", "label": "Píldora (oferta)", "default": "Lleva 3, pagá 2" },

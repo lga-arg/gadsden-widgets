@@ -9,38 +9,38 @@
 -%}
 
 <style>
-  #gps-steps-{{ uid }}{background:{{ bg }};padding:80px 20px;font-family:'Poppins',system-ui,sans-serif}
-  #gps-steps-{{ uid }} .gs-wrap{max-width:1180px;margin:0 auto;text-align:center}
-  #gps-steps-{{ uid }} .gs-eye{font-weight:700;font-size:13.5px;letter-spacing:.22em;text-transform:uppercase;color:#2E7D32}
-  #gps-steps-{{ uid }} h2{font-size:42px;font-weight:800;letter-spacing:-.02em;line-height:1.1;color:#0B1F3A;margin:12px 0 0}
-  #gps-steps-{{ uid }} h2 em{font-style:normal;color:#2E7D32}
-  #gps-steps-{{ uid }} .gs-lead{color:#5f6b7a;font-size:18px;max-width:640px;margin:16px auto 0;line-height:1.5}
-  #gps-steps-{{ uid }} .gs-steps{display:grid;grid-template-columns:repeat({{ section.blocks.size | at_least: 1 }},1fr);gap:30px;margin-top:52px;position:relative}
-  #gps-steps-{{ uid }} .gs-steps:before{content:"";position:absolute;top:32px;left:17%;right:17%;border-top:2px dashed #cfe0d3}
-  #gps-steps-{{ uid }} .gs-step{position:relative;z-index:1;text-align:center}
-  #gps-steps-{{ uid }} .gs-n{width:66px;height:66px;border-radius:50%;background:#fff;border:2px solid #2E7D32;color:#2E7D32;display:grid;place-items:center;margin:0 auto 20px;font-weight:800;font-size:24px;position:relative}
-  #gps-steps-{{ uid }} .gs-n.sig:before,#gps-steps-{{ uid }} .gs-n.sig:after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid #2E7D32;opacity:0;animation:gs-ripple-{{ uid }} 2.6s ease-out infinite}
-  #gps-steps-{{ uid }} .gs-n.sig:after{animation-delay:1.3s}
+  #gad-steps-{{ uid }}{background:{{ bg }};padding:80px 20px;font-family:'Poppins',system-ui,sans-serif}
+  #gad-steps-{{ uid }} .gs-wrap{max-width:1180px;margin:0 auto;text-align:center}
+  #gad-steps-{{ uid }} .gs-eye{font-weight:700;font-size:13.5px;letter-spacing:.22em;text-transform:uppercase;color:#2E7D32}
+  #gad-steps-{{ uid }} h2{font-size:42px;font-weight:800;letter-spacing:-.02em;line-height:1.1;color:#0B1F3A;margin:12px 0 0}
+  #gad-steps-{{ uid }} h2 em{font-style:normal;color:#2E7D32}
+  #gad-steps-{{ uid }} .gs-lead{color:#5f6b7a;font-size:18px;max-width:640px;margin:16px auto 0;line-height:1.5}
+  #gad-steps-{{ uid }} .gs-steps{display:grid;grid-template-columns:repeat({{ section.blocks.size | at_least: 1 }},1fr);gap:30px;margin-top:52px;position:relative}
+  #gad-steps-{{ uid }} .gs-steps:before{content:"";position:absolute;top:32px;left:17%;right:17%;border-top:2px dashed #cfe0d3}
+  #gad-steps-{{ uid }} .gs-step{position:relative;z-index:1;text-align:center}
+  #gad-steps-{{ uid }} .gs-n{width:66px;height:66px;border-radius:50%;background:#fff;border:2px solid #2E7D32;color:#2E7D32;display:grid;place-items:center;margin:0 auto 20px;font-weight:800;font-size:24px;position:relative}
+  #gad-steps-{{ uid }} .gs-n.sig:before,#gad-steps-{{ uid }} .gs-n.sig:after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid #2E7D32;opacity:0;animation:gs-ripple-{{ uid }} 2.6s ease-out infinite}
+  #gad-steps-{{ uid }} .gs-n.sig:after{animation-delay:1.3s}
   @keyframes gs-ripple-{{ uid }}{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.5);opacity:0}}
-  #gps-steps-{{ uid }} .gs-step h3{font-size:21px;font-weight:800;color:#0B1F3A;margin:0 0 8px}
-  #gps-steps-{{ uid }} .gs-step p{color:#5f6b7a;font-size:15.5px;margin:0;line-height:1.5}
-  #gps-steps-{{ uid }} .gs-note{max-width:720px;margin:44px auto 0;border:1px solid #e5eaf1;border-radius:16px;padding:20px 26px;font-weight:600;font-size:16.5px;color:#0B1F3A;background:#fff;display:flex;align-items:center;gap:22px;text-align:left}
-  #gps-steps-{{ uid }} .gs-note small{color:#5f6b7a;font-weight:400;font-size:inherit}
-  #gps-steps-{{ uid }} .gs-mrad{position:relative;width:74px;height:74px;flex:none;border-radius:50%;background:#e9f5ea;border:1px solid #cfe6d3;overflow:hidden}
-  #gps-steps-{{ uid }} .gs-mrad:before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(46,125,50,.35),transparent 85deg);animation:gs-rot-{{ uid }} 4s linear infinite}
-  #gps-steps-{{ uid }} .gs-mrad i{position:absolute;width:10px;height:10px;border-radius:50%;background:#2E7D32;top:50%;left:50%;transform:translate(-50%,-50%)}
+  #gad-steps-{{ uid }} .gs-step h3{font-size:21px;font-weight:800;color:#0B1F3A;margin:0 0 8px}
+  #gad-steps-{{ uid }} .gs-step p{color:#5f6b7a;font-size:15.5px;margin:0;line-height:1.5}
+  #gad-steps-{{ uid }} .gs-note{max-width:720px;margin:44px auto 0;border:1px solid #e5eaf1;border-radius:16px;padding:20px 26px;font-weight:600;font-size:16.5px;color:#0B1F3A;background:#fff;display:flex;align-items:center;gap:22px;text-align:left}
+  #gad-steps-{{ uid }} .gs-note small{color:#5f6b7a;font-weight:400;font-size:inherit}
+  #gad-steps-{{ uid }} .gs-mrad{position:relative;width:74px;height:74px;flex:none;border-radius:50%;background:#e9f5ea;border:1px solid #cfe6d3;overflow:hidden}
+  #gad-steps-{{ uid }} .gs-mrad:before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(46,125,50,.35),transparent 85deg);animation:gs-rot-{{ uid }} 4s linear infinite}
+  #gad-steps-{{ uid }} .gs-mrad i{position:absolute;width:10px;height:10px;border-radius:50%;background:#2E7D32;top:50%;left:50%;transform:translate(-50%,-50%)}
   @keyframes gs-rot-{{ uid }}{to{transform:rotate(360deg)}}
-  @media(prefers-reduced-motion:reduce){#gps-steps-{{ uid }} *{animation:none!important}}
+  @media(prefers-reduced-motion:reduce){#gad-steps-{{ uid }} *{animation:none!important}}
   @media(max-width:900px){
-    #gps-steps-{{ uid }}{padding:56px 18px}
-    #gps-steps-{{ uid }} h2{font-size:30px}
-    #gps-steps-{{ uid }} .gs-steps{grid-template-columns:1fr}
-    #gps-steps-{{ uid }} .gs-steps:before{display:none}
-    #gps-steps-{{ uid }} .gs-note{flex-direction:column;text-align:center}
+    #gad-steps-{{ uid }}{padding:56px 18px}
+    #gad-steps-{{ uid }} h2{font-size:30px}
+    #gad-steps-{{ uid }} .gs-steps{grid-template-columns:1fr}
+    #gad-steps-{{ uid }} .gs-steps:before{display:none}
+    #gad-steps-{{ uid }} .gs-note{flex-direction:column;text-align:center}
   }
 </style>
 
-<div id="gps-steps-{{ uid }}">
+<div id="gad-steps-{{ uid }}">
   <div class="gs-wrap">
     {%- if section.settings.eyebrow != blank -%}<span class="gs-eye">{{ section.settings.eyebrow }}</span>{%- endif -%}
     {%- if section.settings.heading != blank -%}<h2>{{ section.settings.heading }}</h2>{%- endif -%}
@@ -69,7 +69,7 @@
 {
   "name": "Íconos con contenido",
   "tag": "section",
-  "class": "gps-steps-section",
+  "class": "gad-icon-content-section",
   "settings": [
     {
       "type": "select", "id": "bg", "label": "Fondo", "default": "alt",
