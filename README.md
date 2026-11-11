@@ -9,7 +9,9 @@ Los widgets se dibujan en la tienda con NubeSDK, el kit oficial de Tiendanube pa
 
 Gratis para siempre: sin planes, sin prueba y sin costo de instalación.
 
-- Instalar: https://www.tiendanube.com/apps/48010/authorize (está en revisión de Tiendanube)
+- Sitio: https://gadsden.lga-arg.com/
+- Instalar: https://www.tiendanube.com/tienda-aplicaciones-nube/gadsden-widgets (en Brasil:
+  https://www.nuvemshop.com.br/loja-aplicativos-nuvem/gadsden-widgets)
 - Soporte: admin@lga-arg.com
 
 Lo que no hace: no pide ni modera reseñas (muestra las que carga el comerciante) y no cobra el descuento de una oferta
@@ -18,14 +20,15 @@ Lo que no hace: no pide ni modera reseñas (muestra las que carga el comerciante
 Hecha por LGA, socio tecnológico de Tiendanube. No es un producto de Tiendanube.
 
 Son 54 secciones y 26 bloques de la ficha de producto. Cada widget es el de
-[Gadsden](https://github.com/peripequenho/gadsden-theme), con sus mismos estilos, animaciones e interacciones.
+[Gadsden](https://github.com/lga-arg/gadsden-theme), con sus mismos estilos, animaciones e interacciones.
 
 ![Ofertas por cantidad y combos en la ficha de producto](docs/homologacion/imagen-1.png)
 
 ## Cómo se instala en una tienda
 
-1. Entrá con tu cuenta de Tiendanube a <https://www.tiendanube.com/apps/48010/authorize> (en Nuvemshop:
-   <https://www.nuvemshop.com.br/apps/48010/authorize>) y aceptá los permisos.
+1. Abrí la ficha de la app en la Tienda de Aplicaciones de Tiendanube
+   (<https://www.tiendanube.com/tienda-aplicaciones-nube/gadsden-widgets>; en Nuvemshop:
+   <https://www.nuvemshop.com.br/loja-aplicativos-nuvem/gadsden-widgets>), tocá **Instalar** y aceptá los permisos.
 2. Abrí la app en **Mis aplicaciones › Gadsden Widgets**.
 3. Elegí la página, agregá widgets con **+ Agregar sección** o **Agregar bloque**, editá textos, colores e imágenes y
    mirá cómo queda en computadora y en celular.
